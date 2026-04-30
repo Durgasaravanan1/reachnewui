@@ -110,17 +110,30 @@
 
 
 // NotificationsTab.jsx – Notification Preferences
+// NotificationsTab.jsx – Notification Preferences
 import React, { useState } from 'react';
 
 const cn = (...classes) => classes.filter(Boolean).join(' ');
 
 const Toggle = ({ checked, onChange }) => {
   return (
-    <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
-      className={cn("relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2",
-        checked ? "bg-indigo-600" : "bg-slate-200")}>
-      <span aria-hidden="true" className={cn("pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-        checked ? "translate-x-4" : "translate-x-0")} />
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "relative inline-flex h-[22px] w-[42px] flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+        checked ? "bg-[#059669]" : "bg-slate-200" // Emerald-600 color to match image
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className={cn(
+          "pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+          checked ? "translate-x-5" : "translate-x-0"
+        )}
+      />
     </button>
   );
 };
@@ -130,9 +143,9 @@ export default function NotificationsTab() {
     campaignSent: { inApp: true, email: true },
     approvalRequested: { inApp: true, email: true },
     campaignFailed: { inApp: true, email: true },
-    highBounceAlert: { inApp: true, email: false },
+    highBounceAlert: { inApp: true, email: true }, // Updated to match image
     automationError: { inApp: true, email: true },
-    contactImportDone: { inApp: true, email: false },
+    contactImportDone: { inApp: true, email: true }, // Updated to match image
   });
 
   const notificationTypes = [
@@ -145,34 +158,53 @@ export default function NotificationsTab() {
   ];
 
   const handleToggle = (id, type) => {
-    console.log(`[NotificationsTab] Toggling ${id} - ${type}: ${!preferences[id][type]}`);
     setPreferences(prev => ({ ...prev, [id]: { ...prev[id], [type]: !prev[id][type] } }));
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-      <div className="px-5 py-4 border-b border-slate-100">
-        <h3 className="text-sm font-bold text-slate-900">Notification Preferences</h3>
-        <p className="text-xs text-slate-400 mt-0.5">Control which notifications you receive</p>
+    <div className="bg-white rounded-2xl border border-slate-100 p-8 shadow-sm">
+      <div className="mb-8">
+        <h3 className="text-[17px] font-bold text-slate-900">Notification Preferences</h3>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+      
+      <div className="w-full">
+        <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-slate-100 bg-slate-50">
-              <th className="px-5 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wide">NOTIFICATION TYPE</th>
-              <th className="px-5 py-3 text-center text-xs font-semibold text-slate-400 uppercase tracking-wide">IN-APP</th>
-              <th className="px-5 py-3 text-center text-xs font-semibold text-slate-400 uppercase tracking-wide">EMAIL</th>
+            <tr className="bg-slate-50/50">
+              <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                Notification Type
+              </th>
+              <th className="px-4 py-3 text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                In-App
+              </th>
+              <th className="px-4 py-3 text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                Email
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {notificationTypes.map(notif => (
-              <tr key={notif.id} className="hover:bg-slate-50 transition-colors">
-                <td className="px-5 py-3.5">
-                  <p className="font-semibold text-slate-800 text-sm">{notif.label}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{notif.description}</p>
+              <tr key={notif.id} className="group transition-colors">
+                <td className="px-4 py-6">
+                  <p className="font-bold text-[15px] text-slate-900">{notif.label}</p>
+                  <p className="text-[13px] text-slate-400 mt-0.5 font-medium">{notif.description}</p>
                 </td>
-                <td className="px-5 py-3.5 text-center"><Toggle checked={preferences[notif.id]?.inApp} onChange={() => handleToggle(notif.id, 'inApp')} /></td>
-                <td className="px-5 py-3.5 text-center"><Toggle checked={preferences[notif.id]?.email} onChange={() => handleToggle(notif.id, 'email')} /></td>
+                <td className="px-4 py-6 text-center align-middle">
+                  <div className="flex justify-center">
+                    <Toggle 
+                      checked={preferences[notif.id]?.inApp} 
+                      onChange={() => handleToggle(notif.id, 'inApp')} 
+                    />
+                  </div>
+                </td>
+                <td className="px-4 py-6 text-center align-middle">
+                  <div className="flex justify-center">
+                    <Toggle 
+                      checked={preferences[notif.id]?.email} 
+                      onChange={() => handleToggle(notif.id, 'email')} 
+                    />
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>

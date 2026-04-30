@@ -110,7 +110,7 @@
 
 
 // BillingTab.jsx – Plan Usage & Invoices with working Upgrade button
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 const cn = (...classes) => classes.filter(Boolean).join(' ');
 const formatNumber = (num) => num?.toLocaleString() || '0';
@@ -122,18 +122,29 @@ const TrendingUpIcon = () => (
   </svg>
 );
 
-const Button = ({ children, variant, leftIcon, onClick, disabled }) => {
-  const base = "inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-colors focus:outline-none disabled:opacity-50";
+const XIcon = () => (
+  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+
+const Button = ({ children, variant, leftIcon, onClick, disabled, loading }) => {
+  const base = "inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed";
   const variants = { 
     primary: "bg-[#4F46E5] text-white hover:bg-indigo-700", 
     secondary: "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50" 
   };
-  return <button onClick={onClick} disabled={disabled} className={cn(base, variants[variant] || variants.secondary)}>{leftIcon && leftIcon}{children}</button>;
+  return (
+    <button onClick={onClick} disabled={disabled || loading} className={cn(base, variants[variant] || variants.secondary)}>
+      {loading && <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" />}
+      {leftIcon && !loading && leftIcon}
+      {children}
+    </button>
+  );
 };
 
 const ProgressBar = ({ label, used, limit, icon }) => {
   const percentage = Math.min(100, (used / limit) * 100);
-  // Color logic based on image: Over limit = Orange/Red, Under = Indigo
   const isOverLimit = used > limit;
   const barColor = isOverLimit ? 'bg-[#C2410C]' : 'bg-[#4F46E5]';
   
@@ -163,6 +174,25 @@ const ProgressBar = ({ label, used, limit, icon }) => {
   );
 };
 
+// Modal Component
+const Modal = ({ isOpen, onClose, title, children, footer }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100">
+          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+            <XIcon />
+          </button>
+        </div>
+        <div className="px-6 py-4">{children}</div>
+        {footer && <div className="flex justify-end gap-2 px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-2xl">{footer}</div>}
+      </div>
+    </div>
+  );
+};
+
 export default function BillingTab() {
   const [billing, setBilling] = useState({
     planName: 'GROWTH PLAN',
@@ -177,8 +207,84 @@ export default function BillingTab() {
     contactsLimit: 50000,
   });
 
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  const plans = [
+    { 
+      id: 'growth', 
+      name: 'Growth Plan', 
+      price: '₹4,999/month', 
+      emails: '500K', 
+      whatsapp: '100K', 
+      contacts: '50K',
+      limits: { emails: 500000, whatsapp: 100000, contacts: 50000 },
+      features: ['Up to 5 team members', 'Advanced analytics', 'API access', 'Email support']
+    },
+    { 
+      id: 'pro', 
+      name: 'Pro Plan', 
+      price: '₹9,999/month', 
+      emails: '1M', 
+      whatsapp: '250K', 
+      contacts: '200K',
+      limits: { emails: 1000000, whatsapp: 250000, contacts: 200000 },
+      features: ['Up to 15 team members', 'Advanced analytics + custom reports', 'Priority support', 'WhatsApp API access']
+    },
+    { 
+      id: 'enterprise', 
+      name: 'Enterprise', 
+      price: 'Custom', 
+      emails: 'Unlimited', 
+      whatsapp: 'Unlimited', 
+      contacts: 'Unlimited',
+      limits: { emails: Infinity, whatsapp: Infinity, contacts: Infinity },
+      features: ['Unlimited team members', 'SLA & dedicated support', 'Custom integrations', 'Account manager']
+    },
+  ];
+
+  const handleUpgradeClick = () => {
+    setShowUpgradeModal(true);
+    setSelectedPlan(null);
+  };
+
+  const handlePlanSelect = (plan) => {
+    setSelectedPlan(plan);
+  };
+
+  const handleConfirmUpgrade = () => {
+    if (!selectedPlan) return;
+    
+    setIsUpgrading(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setBilling({
+        ...billing,
+        planName: selectedPlan.name.toUpperCase(),
+        price: selectedPlan.price.replace(/[^0-9]/g, ''),
+        emailsLimit: selectedPlan.limits.emails,
+        whatsappLimit: selectedPlan.limits.whatsapp,
+        contactsLimit: selectedPlan.limits.contacts,
+        renewsAt: new Date(new Date().setMonth(new Date().getMonth() + 1)).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+      });
+      
+      setIsUpgrading(false);
+      setShowUpgradeModal(false);
+      setSelectedPlan(null);
+      alert(`Successfully upgraded to ${selectedPlan.name}! Your new limits will take effect immediately.`);
+    }, 1500);
+  };
+
+  const handleCancelUpgrade = () => {
+    setShowUpgradeModal(false);
+    setSelectedPlan(null);
+  };
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-5xl mx-auto p-6">
+      {/* Current Plan Section */}
       <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-8">
@@ -186,7 +292,7 @@ export default function BillingTab() {
             <h3 className="text-[17px] font-bold text-slate-900">Current Plan</h3>
             <p className="text-[15px] text-slate-400 mt-1">Renews on {billing.renewsAt}</p>
           </div>
-          <Button variant="primary" leftIcon={<TrendingUpIcon />}>
+          <Button variant="primary" leftIcon={<TrendingUpIcon />} onClick={handleUpgradeClick}>
             Upgrade Plan
           </Button>
         </div>
@@ -203,9 +309,9 @@ export default function BillingTab() {
             </div>
           </div>
           <div className="text-left sm:text-right text-[15px] font-medium text-[#4F46E5]/80 space-y-1">
-            <p>{formatNumber(500000)} emails/month</p>
-            <p>{formatNumber(100000)} WhatsApp/month</p>
-            <p>{formatNumber(50000)} contacts</p>
+            <p>{formatNumber(billing.emailsLimit)} emails/month</p>
+            <p>{formatNumber(billing.whatsappLimit)} WhatsApp/month</p>
+            <p>{formatNumber(billing.contactsLimit)} contacts</p>
           </div>
         </div>
 
@@ -231,6 +337,92 @@ export default function BillingTab() {
           />
         </div>
       </div>
+
+      {/* Upgrade Plan Modal */}
+      <Modal
+        isOpen={showUpgradeModal}
+        onClose={handleCancelUpgrade}
+        title="Choose a Plan"
+        footer={
+          <>
+            <Button variant="secondary" onClick={handleCancelUpgrade}>
+              Cancel
+            </Button>
+            <Button 
+              variant="primary" 
+              onClick={handleConfirmUpgrade} 
+              disabled={!selectedPlan}
+              loading={isUpgrading}
+            >
+              {isUpgrading ? 'Upgrading...' : 'Confirm Upgrade'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-slate-500">
+            Select the plan that best fits your needs. You can upgrade or downgrade at any time.
+          </p>
+          
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {plans.map((plan) => {
+              const isCurrentPlan = plan.name.toLowerCase().includes(billing.planName.toLowerCase());
+              const isSelected = selectedPlan?.id === plan.id;
+              
+              return (
+                <div
+                  key={plan.id}
+                  className={`rounded-xl border p-5 cursor-pointer transition-all ${
+                    isSelected 
+                      ? 'border-[#4F46E5] bg-indigo-50 ring-2 ring-indigo-500/20' 
+                      : 'border-slate-200 hover:border-slate-300 hover:shadow-sm'
+                  } ${isCurrentPlan ? 'opacity-60' : ''}`}
+                  onClick={() => !isCurrentPlan && handlePlanSelect(plan)}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-lg">{plan.name}</h4>
+                      <p className="text-2xl font-bold text-slate-900 mt-1">{plan.price}</p>
+                    </div>
+                    {isCurrentPlan && (
+                      <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+                        Current Plan
+                      </span>
+                    )}
+                    {isSelected && !isCurrentPlan && (
+                      <span className="text-xs font-semibold text-[#4F46E5] bg-indigo-100 px-2 py-1 rounded-full">
+                        Selected
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-4 mb-3 text-sm text-slate-500">
+                    <span>📧 {plan.emails} emails</span>
+                    <span>💬 {plan.whatsapp} WhatsApp</span>
+                    <span>👥 {plan.contacts} contacts</span>
+                  </div>
+                  
+                  <ul className="space-y-1.5">
+                    {plan.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-center gap-2 text-sm text-slate-600">
+                        <span className="text-emerald-500">✓</span>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+          
+          <div className="mt-4 p-3 bg-slate-50 rounded-lg">
+            <p className="text-xs text-slate-500 text-center">
+              All plans include unlimited team members, API access, and 24/7 support. 
+              Prices are in INR and billed monthly. No hidden fees.
+            </p>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
