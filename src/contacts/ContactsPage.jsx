@@ -1,656 +1,1640 @@
-// ContactsPage.jsx – Fully functional with working buttons
-import React, { useState, useEffect, useCallback } from 'react';
 
-// ===================== Mock Data (initial) =====================
-const INITIAL_LISTS = [
-  { id: 'list1', listName: 'All Subscribers' },
-  { id: 'list2', listName: 'Active Customers' },
-  { id: 'list3', listName: 'Trial Users' },
-  { id: 'list4', listName: 'VIP Customers' },
+// // import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
+
+// // /* ─────────────────────────────────────────────────────────────────
+// //    TAILWIND CONFIG  (tailwind.config.js)
+// //    extend: { fontFamily: { jakarta: ["Plus Jakarta Sans", "sans-serif"] } }
+// // ───────────────────────────────────────────────────────────────── */
+
+// // /* ─── AVATAR COLORS ─────────────────────────────────────────────── */
+// // const AVATAR_COLORS = [
+// //   ["#4f46e5", "#7c3aed"],
+// //   ["#7c3aed", "#a855f7"],
+// //   ["#f59e0b", "#d97706"],
+// //   ["#ef4444", "#dc2626"],
+// //   ["#0ea5e9", "#06b6d4"],
+// //   ["#10b981", "#059669"],
+// // ];
+
+// // /* ─── SEED DATA ──────────────────────────────────────────────────── */
+// // const PREDEFINED = [
+// //   { id: "1", fullName: "Ananya Rajesh",  email: "ananya.rajesh@techvista.in",    phone: "+91 98765 43210", status: "active",     tags: ["vip", "b2b"],      score: 84, list: "Active Customers", campaign: "April Newsletter",    ci: 0 },
+// //   { id: "2", fullName: "Pradeep Mehta",  email: "p.mehta@blueaxis.com",          phone: "+91 87654 32109", status: "active",     tags: ["enterprise"],      score: 62, list: "All Subscribers",  campaign: "Q2 Product Launch",  ci: 1 },
+// //   { id: "3", fullName: "Sunita Nair",    email: "sunita@growfast.co",            phone: "+91 76543 21098", status: "active",     tags: ["trial"],           score: 38, list: "Trial Users",      campaign: "April Newsletter",   ci: 2 },
+// //   { id: "4", fullName: "Ramesh Kumar",   email: "ramesh.k@innodev.io",           phone: "+91 65432 10987", status: "suppressed", tags: ["bounced"],         score:  0, list: "All Subscribers",  campaign: "Hard bounce",        ci: 3 },
+// //   { id: "5", fullName: "Kavitha Iyer",   email: "kavitha.iyer@nexustech.com",    phone: "+91 54321 09876", status: "active",     tags: ["vip", "partner"],  score: 91, list: "VIP Customers",    campaign: "WhatsApp Flash Sale", ci: 4 },
+// //   { id: "6", fullName: "Vikram Sharma",  email: "v.sharma@stratbox.in",          phone: "+91 43210 98765", status: "active",     tags: ["b2b"],             score: 55, list: "Active Customers", campaign: "April Newsletter",   ci: 5 },
+// // ];
+
+// // function buildContacts() {
+// //   const fns  = ["Amit","Priya","Rahul","Neha","Vijay","Sneha","Kunal","Divya","Manish","Pooja","Raj","Anjali","Suresh","Kirti","Manoj","Riya","Arjun","Deepa","Vinod","Lata"];
+// //   const lns  = ["Sharma","Verma","Gupta","Nair","Reddy","Patel","Singh","Kumar","Joshi","Menon","Pillai","Rao","Bose","Das","Iyer"];
+// //   const doms = ["gmail.com","yahoo.com","outlook.com","company.co","tech.in","biz.org"];
+// //   const camps = ["Weekly Digest","Product Update","Flash Sale","Newsletter","Webinar Invite","Renewal Notice","Onboarding Series","Summer Promo"];
+// //   const listOpts = ["Active Customers","All Subscribers","Trial Users","VIP Customers"];
+// //   const tagPool  = ["customer","lead","hot","cold","partner","loyal","new","repeat"];
+// //   const suppTags = ["bounced","unsubscribed","marked-spam"];
+
+// //   const TOTAL = 28450, ACTIVE = 26180, SUPP = 1870;
+// //   const remaining  = TOTAL - PREDEFINED.length;
+// //   const needActive = ACTIVE - PREDEFINED.filter(c => c.status === "active").length;
+// //   const needSupp   = SUPP  - PREDEFINED.filter(c => c.status === "suppressed").length;
+
+// //   const extra = [];
+// //   for (let i = 0; i < remaining; i++) {
+// //     const fn  = fns[i % fns.length];
+// //     const ln  = lns[Math.floor(i / fns.length) % lns.length];
+// //     const stat = i < needActive ? "active" : i < needActive + needSupp ? "suppressed" : "active";
+// //     extra.push({
+// //       id: `g${i}`,
+// //       fullName: `${fn} ${ln}`,
+// //       email:    `${fn.toLowerCase()}.${ln.toLowerCase()}${i % 100}@${doms[i % doms.length]}`,
+// //       phone:    `+91 ${70000 + (i % 30000)} ${10000 + (i % 90000)}`,
+// //       status:   stat,
+// //       tags:     stat === "suppressed" ? [suppTags[i % suppTags.length]] : [tagPool[i % tagPool.length]],
+// //       score:    stat === "suppressed" ? i % 10 : 20 + (i % 80),
+// //       list:     listOpts[i % listOpts.length],
+// //       campaign: stat === "suppressed" ? "Hard bounce" : camps[i % camps.length],
+// //       ci:       i % AVATAR_COLORS.length,
+// //     });
+// //   }
+// //   return [...PREDEFINED, ...extra];
+// // }
+
+// // const ALL_CONTACTS = buildContacts();
+
+// // /* ─── ICONS ──────────────────────────────────────────────────────── */
+// // const UploadIcon = () => (
+// //   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+// //     <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0 0l-4-4m4 4l4-4" />
+// //   </svg>
+// // );
+// // const ImportIcon = () => (
+// //   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+// //     <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 12V4m0 8l-4-4m4 4l4-4" />
+// //   </svg>
+// // );
+// // const SearchIcon = () => (
+// //   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+// //     <circle cx="11" cy="11" r="8" />
+// //     <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
+// //   </svg>
+// // );
+// // const ChevLeft = () => (
+// //   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+// //     <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+// //   </svg>
+// // );
+// // const ChevRight = () => (
+// //   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+// //     <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+// //   </svg>
+// // );
+// // const DotsIcon = () => (
+// //   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+// //     <circle cx="5" cy="12" r="2" />
+// //     <circle cx="12" cy="12" r="2" />
+// //     <circle cx="19" cy="12" r="2" />
+// //   </svg>
+// // );
+
+// // /* ─── SUB-COMPONENTS ─────────────────────────────────────────────── */
+// // function Avatar({ name, ci }) {
+// //   const ini = (name || "?")
+// //     .split(" ")
+// //     .map((n) => n[0])
+// //     .join("")
+// //     .toUpperCase()
+// //     .slice(0, 2);
+// //   const [from, to] = AVATAR_COLORS[ci % AVATAR_COLORS.length];
+// //   return (
+// //     <div
+// //       className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+// //       style={{ background: `linear-gradient(135deg,${from},${to})` }}
+// //     >
+// //       {ini}
+// //     </div>
+// //   );
+// // }
+
+// // function StatusBadge({ status }) {
+// //   const active = status === "active";
+// //   return (
+// //     <span
+// //       className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold
+// //         ${active ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"}`}
+// //     >
+// //       <span className="w-1.5 h-1.5 rounded-full bg-current" />
+// //       {active ? "Active" : "Suppressed"}
+// //     </span>
+// //   );
+// // }
+
+// // function TagChip({ label }) {
+// //   return (
+// //     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-slate-200 text-xs font-semibold text-slate-600 bg-white">
+// //       {label}
+// //     </span>
+// //   );
+// // }
+
+// // function ListBadge({ list }) {
+// //   return (
+// //     <span className="inline-flex items-center px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 bg-white whitespace-nowrap">
+// //       {list}
+// //     </span>
+// //   );
+// // }
+
+// // function EngBar({ score }) {
+// //   const cls =
+// //     score >= 70
+// //       ? { bar: "bg-emerald-500", text: "text-emerald-600" }
+// //       : score >= 40
+// //       ? { bar: "bg-indigo-500",  text: "text-indigo-500"  }
+// //       : score > 0
+// //       ? { bar: "bg-amber-400",   text: "text-amber-500"   }
+// //       : { bar: "bg-slate-200",   text: "text-slate-400"   };
+// //   return (
+// //     <div className="flex items-center gap-2.5">
+// //       <div className="w-16 h-1.5 rounded-full bg-slate-200 overflow-hidden">
+// //         <div className={`h-full rounded-full ${cls.bar}`} style={{ width: `${score}%` }} />
+// //       </div>
+// //       <span className={`text-xs font-black ${cls.text}`}>{score}</span>
+// //     </div>
+// //   );
+// // }
+
+// // /* ─── MAIN PAGE ──────────────────────────────────────────────────── */
+// // export default function ContactsPage() {
+// //   const [contacts, setContacts] = useState(ALL_CONTACTS);
+// //   const [q,        setQ]        = useState("");
+// //   const [listF,    setListF]    = useState("");
+// //   const [statusF,  setStatusF]  = useState("");
+// //   const [page,     setPage]     = useState(1);
+// //   const [selected, setSelected] = useState(new Set());
+// //   const LIMIT = 10;
+
+// //   /* Reset page on filter change */
+// //   useEffect(() => { setPage(1); }, [q, listF, statusF]);
+
+// //   /* Filtered dataset */
+// //   const filtered = useMemo(() => {
+// //     return contacts.filter((c) => {
+// //       if (q) {
+// //         const lq = q.toLowerCase();
+// //         if (
+// //           !c.fullName.toLowerCase().includes(lq) &&
+// //           !c.email.toLowerCase().includes(lq) &&
+// //           !c.phone.includes(lq)
+// //         )
+// //           return false;
+// //       }
+// //       if (listF   && c.list   !== listF)   return false;
+// //       if (statusF && c.status !== statusF) return false;
+// //       return true;
+// //     });
+// //   }, [contacts, q, listF, statusF]);
+
+// //   const totalPages = Math.max(1, Math.ceil(filtered.length / LIMIT));
+// //   const safePage   = Math.min(page, totalPages);
+// //   const slice      = filtered.slice((safePage - 1) * LIMIT, safePage * LIMIT);
+
+// //   const activeCount = contacts.filter((c) => c.status === "active").length;
+// //   const suppCount   = contacts.filter((c) => c.status === "suppressed").length;
+
+// //   /* ── Selection ── */
+// //   const toggleRow = (id) =>
+// //     setSelected((prev) => {
+// //       const n = new Set(prev);
+// //       n.has(id) ? n.delete(id) : n.add(id);
+// //       return n;
+// //     });
+// //   const toggleAll = (e) =>
+// //     e.target.checked
+// //       ? setSelected(new Set(slice.map((c) => c.id)))
+// //       : setSelected(new Set());
+// //   const clearSel = () => setSelected(new Set());
+// //   const allChecked = slice.length > 0 && slice.every((c) => selected.has(c.id));
+
+// //   /* ── Actions ── */
+// //   const handleExport = () => {
+// //     const hdrs = ["Full Name","Email","Phone","Status","Tags","Score","List","Campaign"];
+// //     const rows = filtered.map((c) => [
+// //       c.fullName, c.email, c.phone, c.status,
+// //       c.tags.join(";"), c.score, c.list, c.campaign,
+// //     ]);
+// //     const csv = [hdrs, ...rows]
+// //       .map((r) => r.map((v) => `"${v}"`).join(","))
+// //       .join("\n");
+// //     const a = document.createElement("a");
+// //     a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+// //     a.download = `contacts_${new Date().toISOString().slice(0, 10)}.csv`;
+// //     a.click();
+// //   };
+
+// //   const handleImport = () => {
+// //     const inp = document.createElement("input");
+// //     inp.type = "file";
+// //     inp.accept = ".csv";
+// //     inp.onchange = (e) => {
+// //       const file = e.target.files[0];
+// //       if (!file) return;
+// //       const reader = new FileReader();
+// //       reader.onload = (ev) => {
+// //         const lines = ev.target.result.split("\n").filter((l) => l.trim());
+// //         if (lines.length < 2) { alert("Invalid CSV"); return; }
+// //         const hdrs = lines[0].split(",").map((h) => h.replace(/"/g, "").trim());
+// //         const newC = [];
+// //         for (let i = 1; i < lines.length; i++) {
+// //           const vals = lines[i].split(",").map((v) => v.replace(/"/g, "").trim());
+// //           const nm = vals[hdrs.indexOf("Full Name")] || vals[0] || "Unknown";
+// //           const em = vals[hdrs.indexOf("Email")] || "";
+// //           if (nm && em)
+// //             newC.push({
+// //               id: `imp_${Date.now()}_${i}`,
+// //               fullName: nm,
+// //               email:    em,
+// //               phone:    vals[hdrs.indexOf("Phone")]    || "",
+// //               status:   vals[hdrs.indexOf("Status")]   || "active",
+// //               tags:    (vals[hdrs.indexOf("Tags")]     || "").split(";").filter(Boolean),
+// //               score:   parseInt(vals[hdrs.indexOf("Score")]) || 50,
+// //               list:    vals[hdrs.indexOf("List")]      || "All Subscribers",
+// //               campaign:vals[hdrs.indexOf("Campaign")] || "—",
+// //               ci: 0,
+// //             });
+// //         }
+// //         if (newC.length) {
+// //           setContacts((p) => [...newC, ...p]);
+// //           alert(`Imported ${newC.length} contacts`);
+// //         } else {
+// //           alert("No valid contacts found");
+// //         }
+// //       };
+// //       reader.readAsText(file);
+// //     };
+// //     inp.click();
+// //   };
+
+// //   const handleAddToList = () => {
+// //     if (!selected.size) { alert("No contacts selected"); return; }
+// //     alert(`Add ${selected.size} contacts to list`);
+// //   };
+
+// //   const handleApplyTag = () => {
+// //     if (!selected.size) { alert("No contacts selected"); return; }
+// //     const tag = prompt("Enter tag name:");
+// //     if (tag && tag.trim()) {
+// //       setContacts((p) =>
+// //         p.map((c) =>
+// //           selected.has(c.id) ? { ...c, tags: [...c.tags, tag.trim()] } : c
+// //         )
+// //       );
+// //       alert(`Tag "${tag.trim()}" applied to ${selected.size} contacts`);
+// //       clearSel();
+// //     }
+// //   };
+
+// //   const handleDelete = () => {
+// //     if (!selected.size) { alert("No contacts selected"); return; }
+// //     if (window.confirm(`Delete ${selected.size} contacts permanently?`)) {
+// //       setContacts((p) => p.filter((c) => !selected.has(c.id)));
+// //       clearSel();
+// //     }
+// //   };
+
+// //   /* ── Pagination buttons ── */
+// //   const pageBtns = useMemo(() => {
+// //     const btns = [];
+// //     if (totalPages <= 7) {
+// //       for (let i = 1; i <= totalPages; i++) btns.push(i);
+// //     } else {
+// //       btns.push(1);
+// //       if (safePage > 3) btns.push("...");
+// //       for (let i = Math.max(2, safePage - 1); i <= Math.min(totalPages - 1, safePage + 1); i++)
+// //         btns.push(i);
+// //       if (safePage < totalPages - 2) btns.push("...");
+// //       btns.push(totalPages);
+// //     }
+// //     return btns;
+// //   }, [safePage, totalPages]);
+
+// //   const showStart = (safePage - 1) * LIMIT + 1;
+// //   const showEnd   = Math.min(safePage * LIMIT, filtered.length);
+
+// //   /* ─────────────────────────────────────────────────────────────── */
+// //   return (
+// //     <div className="p-6 bg-slate-50 min-h-screen font-[Plus_Jakarta_Sans,sans-serif]">
+
+// //       {/* ── HEADER ── */}
+// //       <div className="flex items-start justify-between mb-6">
+// //         <div>
+// //           <h1
+// //             style={{
+// //               fontSize: "22px",
+// //               fontWeight: 800,
+// //               color: "#0f172a",
+// //               letterSpacing: "-0.02em",
+// //               lineHeight: 1.2,
+// //             }}
+// //           >
+// //             All Contacts
+// //           </h1>
+// //           <p className="text-sm text-slate-400 mt-1 font-medium">
+// //             {contacts.length.toLocaleString()} total ·{" "}
+// //             {activeCount.toLocaleString()} active ·{" "}
+// //             {suppCount.toLocaleString()} suppressed
+// //           </p>
+// //         </div>
+// //         <div className="flex gap-2.5">
+// //           <button
+// //             onClick={handleExport}
+// //             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors"
+// //           >
+// //             <UploadIcon /> Export
+// //           </button>
+// //           <button
+// //             onClick={handleImport}
+// //             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors"
+// //           >
+// //             <ImportIcon /> Import Contacts
+// //           </button>
+// //         </div>
+// //       </div>
+
+// //       {/* ── BULK ACTION BAR ── */}
+// //       {selected.size > 0 && (
+// //         <div className="flex flex-wrap items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-2.5 mb-4">
+// //           <span className="text-sm font-bold text-indigo-700">
+// //             {selected.size} selected
+// //           </span>
+// //           <button
+// //             onClick={handleAddToList}
+// //             className="px-3 py-1 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+// //           >
+// //             Add to List
+// //           </button>
+// //           <button
+// //             onClick={handleApplyTag}
+// //             className="px-3 py-1 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+// //           >
+// //             Apply Tag
+// //           </button>
+// //           <button
+// //             onClick={handleDelete}
+// //             className="px-3 py-1 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700"
+// //           >
+// //             Delete
+// //           </button>
+// //           <button
+// //             onClick={clearSel}
+// //             className="ml-auto text-xs text-slate-400 hover:text-slate-600 font-medium"
+// //           >
+// //             Clear
+// //           </button>
+// //         </div>
+// //       )}
+
+// //       {/* ── CARD ── */}
+// //       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+
+// //         {/* Filters */}
+// //         <div className="flex flex-wrap items-center gap-3 px-4 py-3.5 border-b border-slate-100">
+// //           {/* Search */}
+// //           <div className="relative">
+// //             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+// //               <SearchIcon />
+// //             </span>
+// //             <input
+// //               type="text"
+// //               placeholder="Search by name, email, phone"
+// //               value={q}
+// //               onChange={(e) => { setQ(e.target.value); setPage(1); }}
+// //               className="pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-xl outline-none w-60
+// //                          focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
+// //             />
+// //           </div>
+
+// //           {/* List filter */}
+// //           <select
+// //             value={listF}
+// //             onChange={(e) => { setListF(e.target.value); setPage(1); }}
+// //             className="py-2 pl-3 pr-8 text-sm border border-slate-200 rounded-xl bg-slate-50
+// //                        text-slate-600 font-medium outline-none focus:border-indigo-500 cursor-pointer"
+// //           >
+// //             <option value="">All Lists</option>
+// //             {["Active Customers","All Subscribers","Trial Users","VIP Customers"].map((l) => (
+// //               <option key={l} value={l}>{l}</option>
+// //             ))}
+// //           </select>
+
+// //           {/* Status filter */}
+// //           <select
+// //             value={statusF}
+// //             onChange={(e) => { setStatusF(e.target.value); setPage(1); }}
+// //             className="py-2 pl-3 pr-8 text-sm border border-slate-200 rounded-xl bg-slate-50
+// //                        text-slate-600 font-medium outline-none focus:border-indigo-500 cursor-pointer"
+// //           >
+// //             <option value="">All Status</option>
+// //             <option value="active">Active</option>
+// //             <option value="suppressed">Suppressed</option>
+// //           </select>
+
+// //           {/* Channel filter */}
+// //           <select
+// //             className="py-2 pl-3 pr-8 text-sm border border-slate-200 rounded-xl bg-slate-50
+// //                        text-slate-600 font-medium outline-none focus:border-indigo-500 cursor-pointer"
+// //           >
+// //             <option value="">All Channels</option>
+// //             <option>Email</option>
+// //             <option>WhatsApp</option>
+// //             <option>SMS</option>
+// //           </select>
+
+// //           <span className="ml-auto text-xs text-slate-400 font-medium">
+// //             Page {safePage} · {LIMIT} per page
+// //           </span>
+// //         </div>
+
+// //         {/* Table */}
+// //         <div className="overflow-x-auto">
+// //           <table className="w-full text-sm border-collapse">
+// //             <thead>
+// //               <tr className="border-b border-slate-100 bg-slate-50">
+// //                 <th className="px-4 py-3 w-10">
+// //                   <input
+// //                     type="checkbox"
+// //                     checked={allChecked}
+// //                     onChange={toggleAll}
+// //                     className="rounded border-slate-300 accent-indigo-600"
+// //                   />
+// //                 </th>
+// //                 {["CONTACT","LISTS","STATUS","TAGS","ENGAGEMENT","LAST CAMPAIGN",""].map((h) => (
+// //                   <th
+// //                     key={h}
+// //                     className="px-4 py-3 text-left text-xs font-bold text-slate-400 tracking-wider uppercase whitespace-nowrap"
+// //                   >
+// //                     {h}
+// //                   </th>
+// //                 ))}
+// //               </tr>
+// //             </thead>
+// //             <tbody>
+// //               {slice.length === 0 ? (
+// //                 <tr>
+// //                   <td colSpan={8} className="text-center py-16 text-slate-400 text-sm font-medium">
+// //                     No contacts found. Try adjusting your search or filters.
+// //                   </td>
+// //                 </tr>
+// //               ) : (
+// //                 slice.map((c) => (
+// //                   <tr
+// //                     key={c.id}
+// //                     className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors"
+// //                   >
+// //                     {/* Checkbox */}
+// //                     <td className="px-4 py-3.5">
+// //                       <input
+// //                         type="checkbox"
+// //                         checked={selected.has(c.id)}
+// //                         onChange={() => toggleRow(c.id)}
+// //                         className="rounded border-slate-300 accent-indigo-600"
+// //                       />
+// //                     </td>
+
+// //                     {/* Contact */}
+// //                     <td className="px-4 py-3.5">
+// //                       <div className="flex items-center gap-3">
+// //                         <Avatar name={c.fullName} ci={c.ci} />
+// //                         <div>
+// //                           <p className="font-bold text-slate-800 text-sm leading-tight">{c.fullName}</p>
+// //                           <p className="text-xs text-slate-400 font-medium mt-0.5">{c.email || c.phone || "—"}</p>
+// //                         </div>
+// //                       </div>
+// //                     </td>
+
+// //                     {/* List */}
+// //                     <td className="px-4 py-3.5"><ListBadge list={c.list} /></td>
+
+// //                     {/* Status */}
+// //                     <td className="px-4 py-3.5"><StatusBadge status={c.status} /></td>
+
+// //                     {/* Tags */}
+// //                     <td className="px-4 py-3.5">
+// //                       <div className="flex gap-1.5 flex-wrap">
+// //                         {c.tags.slice(0, 2).map((t) => <TagChip key={t} label={t} />)}
+// //                         {c.tags.length > 2 && <TagChip label={`+${c.tags.length - 2}`} />}
+// //                       </div>
+// //                     </td>
+
+// //                     {/* Engagement */}
+// //                     <td className="px-4 py-3.5"><EngBar score={c.score} /></td>
+
+// //                     {/* Last Campaign */}
+// //                     <td className="px-4 py-3.5 text-sm text-slate-400 font-medium">{c.campaign || "—"}</td>
+
+// //                     {/* More */}
+// //                     <td className="px-3 py-3.5">
+// //                       <button className="text-slate-300 hover:text-slate-500 hover:bg-slate-100 rounded-lg p-1.5 transition-all">
+// //                         <DotsIcon />
+// //                       </button>
+// //                     </td>
+// //                   </tr>
+// //                 ))
+// //               )}
+// //             </tbody>
+// //           </table>
+// //         </div>
+
+// //         {/* Pagination */}
+// //         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-t border-slate-100 bg-slate-50">
+// //           <p className="text-sm text-slate-400 font-medium">
+// //             Showing{" "}
+// //             {filtered.length === 0 ? "0" : `${showStart}–${showEnd}`} of{" "}
+// //             {filtered.length.toLocaleString()} contacts
+// //           </p>
+// //           <div className="flex items-center gap-1">
+// //             <button
+// //               onClick={() => setPage((p) => Math.max(1, p - 1))}
+// //               disabled={safePage === 1}
+// //               className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200
+// //                          bg-white text-slate-500 hover:bg-slate-100 disabled:opacity-40
+// //                          disabled:cursor-not-allowed transition-all"
+// //             >
+// //               <ChevLeft />
+// //             </button>
+
+// //             {pageBtns.map((b, i) =>
+// //               b === "..." ? (
+// //                 <span key={`e${i}`} className="w-8 h-8 flex items-center justify-center text-xs text-slate-400 font-semibold">
+// //                   …
+// //                 </span>
+// //               ) : (
+// //                 <button
+// //                   key={b}
+// //                   onClick={() => setPage(b)}
+// //                   className={`w-8 h-8 flex items-center justify-center rounded-lg border text-xs font-bold transition-all
+// //                     ${safePage === b
+// //                       ? "bg-indigo-600 text-white border-indigo-600"
+// //                       : "border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+// //                     }`}
+// //                 >
+// //                   {b}
+// //                 </button>
+// //               )
+// //             )}
+
+// //             <button
+// //               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+// //               disabled={safePage === totalPages}
+// //               className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200
+// //                          bg-white text-slate-500 hover:bg-slate-100 disabled:opacity-40
+// //                          disabled:cursor-not-allowed transition-all"
+// //             >
+// //               <ChevRight />
+// //             </button>
+// //           </div>
+// //         </div>
+// //       </div>
+// //     </div>
+// //   );
+// // }
+
+
+// import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
+
+// /* ─────────────────────────────────────────────────────────────────
+//    TAILWIND CONFIG  (tailwind.config.js)
+//    extend: { fontFamily: { jakarta: ["Plus Jakarta Sans", "sans-serif"] } }
+// ───────────────────────────────────────────────────────────────── */
+
+// /* ─── AVATAR COLORS ─────────────────────────────────────────────── */
+// const AVATAR_COLORS = [
+//   ["#4f46e5", "#7c3aed"],
+//   ["#7c3aed", "#a855f7"],
+//   ["#f59e0b", "#d97706"],
+//   ["#ef4444", "#dc2626"],
+//   ["#0ea5e9", "#06b6d4"],
+//   ["#10b981", "#059669"],
+// ];
+
+// /* ─── SEED DATA ──────────────────────────────────────────────────── */
+// const PREDEFINED = [
+//   { id: "1", fullName: "Ananya Rajesh",  email: "ananya.rajesh@techvista.in",    phone: "+91 98765 43210", status: "active",     tags: ["vip", "b2b"],      score: 84, list: "Active Customers", campaign: "April Newsletter",    ci: 0 },
+//   { id: "2", fullName: "Pradeep Mehta",  email: "p.mehta@blueaxis.com",          phone: "+91 87654 32109", status: "active",     tags: ["enterprise"],      score: 62, list: "All Subscribers",  campaign: "Q2 Product Launch",  ci: 1 },
+//   { id: "3", fullName: "Sunita Nair",    email: "sunita@growfast.co",            phone: "+91 76543 21098", status: "active",     tags: ["trial"],           score: 38, list: "Trial Users",      campaign: "April Newsletter",   ci: 2 },
+//   { id: "4", fullName: "Ramesh Kumar",   email: "ramesh.k@innodev.io",           phone: "+91 65432 10987", status: "suppressed", tags: ["bounced"],         score:  0, list: "All Subscribers",  campaign: "Hard bounce",        ci: 3 },
+//   { id: "5", fullName: "Kavitha Iyer",   email: "kavitha.iyer@nexustech.com",    phone: "+91 54321 09876", status: "active",     tags: ["vip", "partner"],  score: 91, list: "VIP Customers",    campaign: "WhatsApp Flash Sale", ci: 4 },
+//   { id: "6", fullName: "Vikram Sharma",  email: "v.sharma@stratbox.in",          phone: "+91 43210 98765", status: "active",     tags: ["b2b"],             score: 55, list: "Active Customers", campaign: "April Newsletter",   ci: 5 },
+// ];
+
+// function buildContacts() {
+//   const fns  = ["Amit","Priya","Rahul","Neha","Vijay","Sneha","Kunal","Divya","Manish","Pooja","Raj","Anjali","Suresh","Kirti","Manoj","Riya","Arjun","Deepa","Vinod","Lata"];
+//   const lns  = ["Sharma","Verma","Gupta","Nair","Reddy","Patel","Singh","Kumar","Joshi","Menon","Pillai","Rao","Bose","Das","Iyer"];
+//   const doms = ["gmail.com","yahoo.com","outlook.com","company.co","tech.in","biz.org"];
+//   const camps = ["Weekly Digest","Product Update","Flash Sale","Newsletter","Webinar Invite","Renewal Notice","Onboarding Series","Summer Promo"];
+//   const listOpts = ["Active Customers","All Subscribers","Trial Users","VIP Customers"];
+//   const tagPool  = ["customer","lead","hot","cold","partner","loyal","new","repeat"];
+//   const suppTags = ["bounced","unsubscribed","marked-spam"];
+
+//   const TOTAL = 28450, ACTIVE = 26180, SUPP = 1870;
+//   const remaining  = TOTAL - PREDEFINED.length;
+//   const needActive = ACTIVE - PREDEFINED.filter(c => c.status === "active").length;
+//   const needSupp   = SUPP  - PREDEFINED.filter(c => c.status === "suppressed").length;
+
+//   const extra = [];
+//   for (let i = 0; i < remaining; i++) {
+//     const fn  = fns[i % fns.length];
+//     const ln  = lns[Math.floor(i / fns.length) % lns.length];
+//     const stat = i < needActive ? "active" : i < needActive + needSupp ? "suppressed" : "active";
+//     extra.push({
+//       id: `g${i}`,
+//       fullName: `${fn} ${ln}`,
+//       email:    `${fn.toLowerCase()}.${ln.toLowerCase()}${i % 100}@${doms[i % doms.length]}`,
+//       phone:    `+91 ${70000 + (i % 30000)} ${10000 + (i % 90000)}`,
+//       status:   stat,
+//       tags:     stat === "suppressed" ? [suppTags[i % suppTags.length]] : [tagPool[i % tagPool.length]],
+//       score:    stat === "suppressed" ? i % 10 : 20 + (i % 80),
+//       list:     listOpts[i % listOpts.length],
+//       campaign: stat === "suppressed" ? "Hard bounce" : camps[i % camps.length],
+//       ci:       i % AVATAR_COLORS.length,
+//     });
+//   }
+//   return [...PREDEFINED, ...extra];
+// }
+
+// const ALL_CONTACTS = buildContacts();
+
+// /* ─── ICONS ──────────────────────────────────────────────────────── */
+// const UploadIcon = () => (
+//   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+//     <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0 0l-4-4m4 4l4-4" />
+//   </svg>
+// );
+// const ImportIcon = () => (
+//   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+//     <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 12V4m0 8l-4-4m4 4l4-4" />
+//   </svg>
+// );
+// const SearchIcon = () => (
+//   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+//     <circle cx="11" cy="11" r="8" />
+//     <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
+//   </svg>
+// );
+// const ChevLeft = () => (
+//   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+//     <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+//   </svg>
+// );
+// const ChevRight = () => (
+//   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+//     <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+//   </svg>
+// );
+// const DotsIcon = () => (
+//   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+//     <circle cx="5" cy="12" r="2" />
+//     <circle cx="12" cy="12" r="2" />
+//     <circle cx="19" cy="12" r="2" />
+//   </svg>
+// );
+
+// /* ─── SUB-COMPONENTS ─────────────────────────────────────────────── */
+// function Avatar({ name, ci }) {
+//   const ini = (name || "?")
+//     .split(" ")
+//     .map((n) => n[0])
+//     .join("")
+//     .toUpperCase()
+//     .slice(0, 2);
+//   const [from, to] = AVATAR_COLORS[ci % AVATAR_COLORS.length];
+//   return (
+//     <div
+//       className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+//       style={{ background: `linear-gradient(135deg,${from},${to})` }}
+//     >
+//       {ini}
+//     </div>
+//   );
+// }
+
+// function StatusBadge({ status }) {
+//   const active = status === "active";
+//   return (
+//     <span
+//       className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold
+//         ${active ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"}`}
+//     >
+//       <span className="w-1.5 h-1.5 rounded-full bg-current" />
+//       {active ? "Active" : "Suppressed"}
+//     </span>
+//   );
+// }
+
+// function TagChip({ label }) {
+//   return (
+//     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-slate-200 text-xs font-semibold text-slate-600 bg-white">
+//       {label}
+//     </span>
+//   );
+// }
+
+// function ListBadge({ list }) {
+//   return (
+//     <span className="inline-flex items-center px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 bg-white whitespace-nowrap">
+//       {list}
+//     </span>
+//   );
+// }
+
+// function EngBar({ score }) {
+//   const cls =
+//     score >= 70
+//       ? { bar: "bg-emerald-500", text: "text-emerald-600" }
+//       : score >= 40
+//       ? { bar: "bg-indigo-500",  text: "text-indigo-500"  }
+//       : score > 0
+//       ? { bar: "bg-amber-400",   text: "text-amber-500"   }
+//       : { bar: "bg-slate-200",   text: "text-slate-400"   };
+//   return (
+//     <div className="flex items-center gap-2.5">
+//       <div className="w-16 h-1.5 rounded-full bg-slate-200 overflow-hidden">
+//         <div className={`h-full rounded-full ${cls.bar}`} style={{ width: `${score}%` }} />
+//       </div>
+//       <span className={`text-xs font-black ${cls.text}`}>{score}</span>
+//     </div>
+//   );
+// }
+
+// /* ─── MAIN PAGE ──────────────────────────────────────────────────── */
+// export default function ContactsPage() {
+//   const [contacts, setContacts] = useState(ALL_CONTACTS);
+//   const [q,        setQ]        = useState("");
+//   const [listF,    setListF]    = useState("");
+//   const [statusF,  setStatusF]  = useState("");
+//   const [page,     setPage]     = useState(1);
+//   const [selected, setSelected] = useState(new Set());
+//   const LIMIT = 10;
+
+//   /* Reset page on filter change */
+//   useEffect(() => { setPage(1); }, [q, listF, statusF]);
+
+//   /* Filtered dataset – improved search: also searches tags */
+//   const filtered = useMemo(() => {
+//     return contacts.filter((c) => {
+//       if (q) {
+//         const lq = q.toLowerCase();
+//         const matchName = c.fullName.toLowerCase().includes(lq);
+//         const matchEmail = c.email.toLowerCase().includes(lq);
+//         const matchPhone = c.phone.includes(lq);
+//         const matchTags = c.tags.some(tag => tag.toLowerCase().includes(lq));
+//         if (!(matchName || matchEmail || matchPhone || matchTags)) return false;
+//       }
+//       if (listF   && c.list   !== listF)   return false;
+//       if (statusF && c.status !== statusF) return false;
+//       return true;
+//     });
+//   }, [contacts, q, listF, statusF]);
+
+//   const totalPages = Math.max(1, Math.ceil(filtered.length / LIMIT));
+//   const safePage   = Math.min(page, totalPages);
+//   const slice      = filtered.slice((safePage - 1) * LIMIT, safePage * LIMIT);
+
+//   const activeCount = contacts.filter((c) => c.status === "active").length;
+//   const suppCount   = contacts.filter((c) => c.status === "suppressed").length;
+
+//   /* ── Selection ── */
+//   const toggleRow = (id) =>
+//     setSelected((prev) => {
+//       const n = new Set(prev);
+//       n.has(id) ? n.delete(id) : n.add(id);
+//       return n;
+//     });
+//   const toggleAll = (e) =>
+//     e.target.checked
+//       ? setSelected(new Set(slice.map((c) => c.id)))
+//       : setSelected(new Set());
+//   const clearSel = () => setSelected(new Set());
+//   const allChecked = slice.length > 0 && slice.every((c) => selected.has(c.id));
+
+//   /* ── Actions ── */
+//   const handleExport = () => {
+//     const hdrs = ["Full Name","Email","Phone","Status","Tags","Score","List","Campaign"];
+//     const rows = filtered.map((c) => [
+//       c.fullName, c.email, c.phone, c.status,
+//       c.tags.join(";"), c.score, c.list, c.campaign,
+//     ]);
+//     const csv = [hdrs, ...rows]
+//       .map((r) => r.map((v) => `"${v}"`).join(","))
+//       .join("\n");
+//     const a = document.createElement("a");
+//     a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+//     a.download = `contacts_${new Date().toISOString().slice(0, 10)}.csv`;
+//     a.click();
+//   };
+
+//   const handleImport = () => {
+//     const inp = document.createElement("input");
+//     inp.type = "file";
+//     inp.accept = ".csv";
+//     inp.onchange = (e) => {
+//       const file = e.target.files[0];
+//       if (!file) return;
+//       const reader = new FileReader();
+//       reader.onload = (ev) => {
+//         const lines = ev.target.result.split("\n").filter((l) => l.trim());
+//         if (lines.length < 2) { alert("Invalid CSV"); return; }
+//         const hdrs = lines[0].split(",").map((h) => h.replace(/"/g, "").trim());
+//         const newC = [];
+//         for (let i = 1; i < lines.length; i++) {
+//           const vals = lines[i].split(",").map((v) => v.replace(/"/g, "").trim());
+//           const nm = vals[hdrs.indexOf("Full Name")] || vals[0] || "Unknown";
+//           const em = vals[hdrs.indexOf("Email")] || "";
+//           if (nm && em)
+//             newC.push({
+//               id: `imp_${Date.now()}_${i}`,
+//               fullName: nm,
+//               email:    em,
+//               phone:    vals[hdrs.indexOf("Phone")]    || "",
+//               status:   vals[hdrs.indexOf("Status")]   || "active",
+//               tags:    (vals[hdrs.indexOf("Tags")]     || "").split(";").filter(Boolean),
+//               score:   parseInt(vals[hdrs.indexOf("Score")]) || 50,
+//               list:    vals[hdrs.indexOf("List")]      || "All Subscribers",
+//               campaign:vals[hdrs.indexOf("Campaign")] || "—",
+//               ci: 0,
+//             });
+//         }
+//         if (newC.length) {
+//           setContacts((p) => [...newC, ...p]);
+//           alert(`Imported ${newC.length} contacts`);
+//         } else {
+//           alert("No valid contacts found");
+//         }
+//       };
+//       reader.readAsText(file);
+//     };
+//     inp.click();
+//   };
+
+//   const handleAddToList = () => {
+//     if (!selected.size) { alert("No contacts selected"); return; }
+//     alert(`Add ${selected.size} contacts to list`);
+//   };
+
+//   const handleApplyTag = () => {
+//     if (!selected.size) { alert("No contacts selected"); return; }
+//     const tag = prompt("Enter tag name:");
+//     if (tag && tag.trim()) {
+//       setContacts((p) =>
+//         p.map((c) =>
+//           selected.has(c.id) ? { ...c, tags: [...c.tags, tag.trim()] } : c
+//         )
+//       );
+//       alert(`Tag "${tag.trim()}" applied to ${selected.size} contacts`);
+//       clearSel();
+//     }
+//   };
+
+//   const handleDelete = () => {
+//     if (!selected.size) { alert("No contacts selected"); return; }
+//     if (window.confirm(`Delete ${selected.size} contacts permanently?`)) {
+//       setContacts((p) => p.filter((c) => !selected.has(c.id)));
+//       clearSel();
+//     }
+//   };
+
+//   /* ── Pagination buttons ── */
+//   const pageBtns = useMemo(() => {
+//     const btns = [];
+//     if (totalPages <= 7) {
+//       for (let i = 1; i <= totalPages; i++) btns.push(i);
+//     } else {
+//       btns.push(1);
+//       if (safePage > 3) btns.push("...");
+//       for (let i = Math.max(2, safePage - 1); i <= Math.min(totalPages - 1, safePage + 1); i++)
+//         btns.push(i);
+//       if (safePage < totalPages - 2) btns.push("...");
+//       btns.push(totalPages);
+//     }
+//     return btns;
+//   }, [safePage, totalPages]);
+
+//   const showStart = (safePage - 1) * LIMIT + 1;
+//   const showEnd   = Math.min(safePage * LIMIT, filtered.length);
+
+//   /* ─────────────────────────────────────────────────────────────── */
+//   return (
+//     <div className="p-6 bg-slate-50 min-h-screen font-[Plus_Jakarta_Sans,sans-serif]">
+
+//       {/* ── HEADER ── */}
+//       <div className="flex items-start justify-between mb-6">
+//         <div>
+//           <h1
+//             style={{
+//               fontSize: "26px",        // slightly increased from 22px
+//               fontWeight: 800,
+//               color: "#0f172a",
+//               letterSpacing: "-0.02em",
+//               lineHeight: 1.2,
+//             }}
+//           >
+//             All Contacts
+//           </h1>
+//           <p className="text-sm text-slate-400 mt-1 font-medium">
+//             {contacts.length.toLocaleString()} total ·{" "}
+//             {activeCount.toLocaleString()} active ·{" "}
+//             {suppCount.toLocaleString()} suppressed
+//           </p>
+//         </div>
+//         <div className="flex gap-2.5">
+//           <button
+//             onClick={handleExport}
+//             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors"
+//           >
+//             <UploadIcon /> Export
+//           </button>
+//           <button
+//             onClick={handleImport}
+//             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors"
+//           >
+//             <ImportIcon /> Import Contacts
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* ── BULK ACTION BAR ── */}
+//       {selected.size > 0 && (
+//         <div className="flex flex-wrap items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-2.5 mb-4">
+//           <span className="text-sm font-bold text-indigo-700">
+//             {selected.size} selected
+//           </span>
+//           <button
+//             onClick={handleAddToList}
+//             className="px-3 py-1 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+//           >
+//             Add to List
+//           </button>
+//           <button
+//             onClick={handleApplyTag}
+//             className="px-3 py-1 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+//           >
+//             Apply Tag
+//           </button>
+//           <button
+//             onClick={handleDelete}
+//             className="px-3 py-1 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700"
+//           >
+//             Delete
+//           </button>
+//           <button
+//             onClick={clearSel}
+//             className="ml-auto text-xs text-slate-400 hover:text-slate-600 font-medium"
+//           >
+//             Clear
+//           </button>
+//         </div>
+//       )}
+
+//       {/* ── CARD ── */}
+//       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+
+//         {/* Filters */}
+//         <div className="flex flex-wrap items-center gap-3 px-4 py-3.5 border-b border-slate-100">
+//           {/* Search */}
+//           <div className="relative">
+//             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+//               <SearchIcon />
+//             </span>
+//             <input
+//               type="text"
+//               placeholder="Search by name, email, phone or tag"
+//               value={q}
+//               onChange={(e) => { setQ(e.target.value); setPage(1); }}
+//               className="pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-xl outline-none w-60
+//                          focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
+//             />
+//           </div>
+
+//           {/* List filter */}
+//           <select
+//             value={listF}
+//             onChange={(e) => { setListF(e.target.value); setPage(1); }}
+//             className="py-2 pl-3 pr-8 text-sm border border-slate-200 rounded-xl bg-slate-50
+//                        text-slate-600 font-medium outline-none focus:border-indigo-500 cursor-pointer"
+//           >
+//             <option value="">All Lists</option>
+//             {["Active Customers","All Subscribers","Trial Users","VIP Customers"].map((l) => (
+//               <option key={l} value={l}>{l}</option>
+//             ))}
+//           </select>
+
+//           {/* Status filter */}
+//           <select
+//             value={statusF}
+//             onChange={(e) => { setStatusF(e.target.value); setPage(1); }}
+//             className="py-2 pl-3 pr-8 text-sm border border-slate-200 rounded-xl bg-slate-50
+//                        text-slate-600 font-medium outline-none focus:border-indigo-500 cursor-pointer"
+//           >
+//             <option value="">All Status</option>
+//             <option value="active">Active</option>
+//             <option value="suppressed">Suppressed</option>
+//           </select>
+
+//           {/* Channel filter */}
+//           <select
+//             className="py-2 pl-3 pr-8 text-sm border border-slate-200 rounded-xl bg-slate-50
+//                        text-slate-600 font-medium outline-none focus:border-indigo-500 cursor-pointer"
+//           >
+//             <option value="">All Channels</option>
+//             <option>Email</option>
+//             <option>WhatsApp</option>
+//             <option>SMS</option>
+//           </select>
+
+//           <span className="ml-auto text-xs text-slate-400 font-medium">
+//             Page {safePage} · {LIMIT} per page
+//           </span>
+//         </div>
+
+//         {/* Table */}
+//         <div className="overflow-x-auto">
+//           <table className="w-full text-sm border-collapse">
+//             <thead>
+//               <tr className="border-b border-slate-100 bg-slate-50">
+//                 <th className="px-4 py-3 w-10">
+//                   <input
+//                     type="checkbox"
+//                     checked={allChecked}
+//                     onChange={toggleAll}
+//                     className="rounded border-slate-300 accent-indigo-600"
+//                   />
+//                 </th>
+//                 {["CONTACT","LISTS","STATUS","TAGS","ENGAGEMENT","LAST CAMPAIGN",""].map((h) => (
+//                   <th
+//                     key={h}
+//                     className="px-4 py-3 text-left text-xs font-bold text-slate-400 tracking-wider uppercase whitespace-nowrap"
+//                   >
+//                     {h}
+//                   </th>
+//                 ))}
+//               </tr>
+//             </thead>
+//             <tbody>
+//               {slice.length === 0 ? (
+//                 <tr>
+//                   <td colSpan={8} className="text-center py-16 text-slate-400 text-sm font-medium">
+//                     No contacts found. Try adjusting your search or filters.
+//                   </td>
+//                 </tr>
+//               ) : (
+//                 slice.map((c) => (
+//                   <tr
+//                     key={c.id}
+//                     className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors"
+//                   >
+//                     {/* Checkbox */}
+//                     <td className="px-4 py-3.5">
+//                       <input
+//                         type="checkbox"
+//                         checked={selected.has(c.id)}
+//                         onChange={() => toggleRow(c.id)}
+//                         className="rounded border-slate-300 accent-indigo-600"
+//                       />
+//                     </td>
+
+//                     {/* Contact */}
+//                     <td className="px-4 py-3.5">
+//                       <div className="flex items-center gap-3">
+//                         <Avatar name={c.fullName} ci={c.ci} />
+//                         <div>
+//                           <p className="font-bold text-slate-800 text-sm leading-tight">{c.fullName}</p>
+//                           <p className="text-xs text-slate-400 font-medium mt-0.5">{c.email || c.phone || "—"}</p>
+//                         </div>
+//                       </div>
+//                     </td>
+
+//                     {/* List */}
+//                     <td className="px-4 py-3.5"><ListBadge list={c.list} /></td>
+
+//                     {/* Status */}
+//                     <td className="px-4 py-3.5"><StatusBadge status={c.status} /></td>
+
+//                     {/* Tags */}
+//                     <td className="px-4 py-3.5">
+//                       <div className="flex gap-1.5 flex-wrap">
+//                         {c.tags.slice(0, 2).map((t) => <TagChip key={t} label={t} />)}
+//                         {c.tags.length > 2 && <TagChip label={`+${c.tags.length - 2}`} />}
+//                       </div>
+//                     </td>
+
+//                     {/* Engagement */}
+//                     <td className="px-4 py-3.5"><EngBar score={c.score} /></td>
+
+//                     {/* Last Campaign */}
+//                     <td className="px-4 py-3.5 text-sm text-slate-400 font-medium">{c.campaign || "—"}</td>
+
+//                     {/* More */}
+//                     <td className="px-3 py-3.5">
+//                       <button className="text-slate-300 hover:text-slate-500 hover:bg-slate-100 rounded-lg p-1.5 transition-all">
+//                         <DotsIcon />
+//                       </button>
+//                     </td>
+//                   </tr>
+//                 ))
+//               )}
+//             </tbody>
+//           </table>
+//         </div>
+
+//         {/* Pagination */}
+//         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-t border-slate-100 bg-slate-50">
+//           <p className="text-sm text-slate-400 font-medium">
+//             Showing{" "}
+//             {filtered.length === 0 ? "0" : `${showStart}–${showEnd}`} of{" "}
+//             {filtered.length.toLocaleString()} contacts
+//           </p>
+//           <div className="flex items-center gap-1">
+//             <button
+//               onClick={() => setPage((p) => Math.max(1, p - 1))}
+//               disabled={safePage === 1}
+//               className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200
+//                          bg-white text-slate-500 hover:bg-slate-100 disabled:opacity-40
+//                          disabled:cursor-not-allowed transition-all"
+//             >
+//               <ChevLeft />
+//             </button>
+
+//             {pageBtns.map((b, i) =>
+//               b === "..." ? (
+//                 <span key={`e${i}`} className="w-8 h-8 flex items-center justify-center text-xs text-slate-400 font-semibold">
+//                   …
+//                 </span>
+//               ) : (
+//                 <button
+//                   key={b}
+//                   onClick={() => setPage(b)}
+//                   className={`w-8 h-8 flex items-center justify-center rounded-lg border text-xs font-bold transition-all
+//                     ${safePage === b
+//                       ? "bg-indigo-600 text-white border-indigo-600"
+//                       : "border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+//                     }`}
+//                 >
+//                   {b}
+//                 </button>
+//               )
+//             )}
+
+//             <button
+//               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+//               disabled={safePage === totalPages}
+//               className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200
+//                          bg-white text-slate-500 hover:bg-slate-100 disabled:opacity-40
+//                          disabled:cursor-not-allowed transition-all"
+//             >
+//               <ChevRight />
+//             </button>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+
+import React, { useState, useMemo, useEffect } from "react";
+
+/* ─────────────────────────────────────────────────────────────────
+   TAILWIND CONFIG – make sure 'Plus Jakarta Sans' is set as default font
+───────────────────────────────────────────────────────────────── */
+
+/* ─── AVATAR COLORS ─────────────────────────────────────────────── */
+const AVATAR_COLORS = [
+  ["#4f46e5", "#7c3aed"],
+  ["#7c3aed", "#a855f7"],
+  ["#f59e0b", "#d97706"],
+  ["#ef4444", "#dc2626"],
+  ["#0ea5e9", "#06b6d4"],
+  ["#10b981", "#059669"],
 ];
 
-const INITIAL_CONTACTS = [
-  { id: '1', fullName: 'Ananya Rajesh', email: 'ananya.rajesh@techvista.in', phoneNumber: '+91 98765 43210', globalStatus: 'active', tags: ['vip', 'b2b'], engagementScore: 84, source: 'import', lastCampaign: 'April Flash Sale', list: 'Active Customers' },
-  { id: '2', fullName: 'Pradeep Mehta', email: 'p.mehta@blueaxis.com', phoneNumber: '+91 87654 32109', globalStatus: 'active', tags: ['enterprise'], engagementScore: 62, source: 'form', lastCampaign: 'March Newsletter', list: 'All Subscribers' },
-  { id: '3', fullName: 'Sunita Nair', email: 'sunita@growfast.co', phoneNumber: '+91 76543 21098', globalStatus: 'active', tags: ['vip', 'partner'], engagementScore: 91, source: 'import', lastCampaign: 'WhatsApp Flash Sale', list: 'VIP Customers' },
-  { id: '4', fullName: 'Ramesh Kumar', email: 'ramesh.k@innodev.io', phoneNumber: '+91 65432 10987', globalStatus: 'suppressed', tags: ['bounced'], engagementScore: 23, source: 'import', lastCampaign: 'Tech Summit', list: 'All Subscribers' },
-  { id: '5', fullName: 'Kavitha Iyer', email: 'kavitha.iyer@nexustech.com', phoneNumber: '+91 54321 09876', globalStatus: 'active', tags: ['vip', 'b2b'], engagementScore: 78, source: 'api', lastCampaign: 'Product Launch', list: 'VIP Customers' },
-  { id: '6', fullName: 'Vikram Sharma', email: 'v.sharma@stratbox.in', phoneNumber: '+91 43210 98765', globalStatus: 'active', tags: ['trial'], engagementScore: 45, source: 'form', lastCampaign: 'Onboarding Email', list: 'Trial Users' },
-  { id: '7', fullName: 'Neha Gupta', email: 'neha.gupta@example.com', phoneNumber: '+91 99887 66554', globalStatus: 'active', tags: ['customer'], engagementScore: 72, source: 'import', lastCampaign: 'Weekly Digest', list: 'Active Customers' },
-  { id: '8', fullName: 'Arjun Nair', email: 'arjun@nair.co', phoneNumber: '+91 88776 55443', globalStatus: 'suppressed', tags: ['unsubscribed'], engagementScore: 12, source: 'form', lastCampaign: 'Promotion May', list: 'All Subscribers' },
+/* ─── SEED DATA (exact counts 28,450 total · 26,580 active · 1,870 suppressed) ─── */
+const PREDEFINED = [
+  { id: "1", fullName: "Ananya Rajesh",  email: "ananya.rajesh@techvista.in",    phone: "+91 98765 43210", status: "active", tags: ["vip", "b2b"],   score: 84, list: "Active Customers", campaign: "April Newsletter",    ci: 0 },
+  { id: "2", fullName: "Pradeep Mehta",  email: "p.mehta@blueaxis.com",          phone: "+91 87654 32109", status: "active", tags: ["enterprise"],   score: 62, list: "All Subscribers",  campaign: "Q2 Product Launch",  ci: 1 },
+  { id: "3", fullName: "Sunita Nair",    email: "sunita@growfast.co",            phone: "+91 76543 21098", status: "active", tags: ["trial"],        score: 38, list: "Trial Users",      campaign: "April Newsletter",   ci: 2 },
+  { id: "4", fullName: "Ramesh Kumar",   email: "ramesh.k@innodev.io",           phone: "+91 65432 10987", status: "suppressed", tags: ["bounced"],  score:  0, list: "All Subscribers",  campaign: "Hard bounce",        ci: 3 },
+  { id: "5", fullName: "Kavitha Iyer",   email: "kavitha.iyer@nexustech.com",    phone: "+91 54321 09876", status: "active", tags: ["vip","partner"], score: 91, list: "VIP Customers",    campaign: "WhatsApp Flash Sale", ci: 4 },
+  { id: "6", fullName: "Vikram Sharma",  email: "v.sharma@stratbox.in",          phone: "+91 43210 98765", status: "active", tags: ["b2b"],          score: 55, list: "Active Customers", campaign: "April Newsletter",   ci: 5 },
+  { id: "7", fullName: "Priya Sharma",   email: "priya.sharmal@yahoo.com",       phone: "+91 99887 66554", status: "active", tags: ["lead"],         score: 21, list: "All Subscribers",  campaign: "Weekly Digest",      ci: 0 },
+  { id: "8", fullName: "Neha Sharma",    email: "neha.sharma3@company.co",       phone: "+91 88776 55443", status: "active", tags: ["cold"],         score: 23, list: "VIP Customers",    campaign: "Flash Sale",         ci: 1 },
 ];
 
-// ===================== Reliable useContacts Hook (mutable) =====================
-const useContacts = () => {
-  const [contacts, setContacts] = useState(INITIAL_CONTACTS);
-  const [total, setTotal] = useState(INITIAL_CONTACTS.length);
-  const [totalPages, setTotalPages] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [filters, setFilters] = useState({
-    q: null,
-    listId: null,
-    status: null,
-    page: 1,
-    limit: 10,
-  });
+function buildFullDataset() {
+  const fns  = ["Amit","Priya","Rahul","Neha","Vijay","Sneha","Kunal","Divya","Manish","Pooja","Raj","Anjali","Suresh","Kirti","Manoj","Riya","Arjun","Deepa","Vinod","Lata"];
+  const lns  = ["Sharma","Verma","Gupta","Nair","Reddy","Patel","Singh","Kumar","Joshi","Menon"];
+  const doms = ["gmail.com","yahoo.com","outlook.com","company.co","tech.in"];
+  const camps = ["Weekly Digest","Product Update","Flash Sale","Newsletter","Webinar Invite","Renewal Notice","Onboarding Series"];
+  const listOpts = ["Active Customers","All Subscribers","Trial Users","VIP Customers"];
+  const tagPool  = ["customer","lead","hot","cold","partner","loyal","new","repeat"];
+  const suppTags = ["bounced","unsubscribed","marked-spam"];
 
-  // Simulate initial loading delay
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const filteredCount = INITIAL_CONTACTS.length;
-      setTotal(filteredCount);
-      setTotalPages(Math.ceil(filteredCount / 10));
-      setIsLoading(false);
-    }, 600);
-    return () => clearTimeout(timer);
-  }, []);
+  const TOTAL = 28450, ACTIVE = 26580, SUPP = 1870;
+  const remaining  = TOTAL - PREDEFINED.length;
+  const needActive = ACTIVE - PREDEFINED.filter(c => c.status === "active").length;
+  const needSupp   = SUPP  - PREDEFINED.filter(c => c.status === "suppressed").length;
 
-  // Apply filters and pagination whenever contacts or filters change
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      let filtered = [...contacts];
+  const extra = [];
+  for (let i = 0; i < remaining; i++) {
+    const fn  = fns[i % fns.length];
+    const ln  = lns[Math.floor(i / fns.length) % lns.length];
+    const stat = i < needActive ? "active" : i < needActive + needSupp ? "suppressed" : "active";
+    extra.push({
+      id: `g${i}`,
+      fullName: `${fn} ${ln}`,
+      email:    `${fn.toLowerCase()}.${ln.toLowerCase()}${i % 100}@${doms[i % doms.length]}`,
+      phone:    `+91 ${70000 + (i % 30000)} ${10000 + (i % 90000)}`,
+      status:   stat,
+      tags:     stat === "suppressed" ? [suppTags[i % suppTags.length]] : [tagPool[i % tagPool.length]],
+      score:    stat === "suppressed" ? i % 10 : 20 + (i % 80),
+      list:     listOpts[i % listOpts.length],
+      campaign: stat === "suppressed" ? "Hard bounce" : camps[i % camps.length],
+      ci:       i % AVATAR_COLORS.length,
+    });
+  }
+  return [...PREDEFINED, ...extra];
+}
 
-      if (filters.q) {
-        const q = filters.q.toLowerCase();
-        filtered = filtered.filter(
-          (c) =>
-            c.fullName.toLowerCase().includes(q) ||
-            (c.email && c.email.toLowerCase().includes(q)) ||
-            (c.phoneNumber && c.phoneNumber.includes(q))
-        );
-      }
-      if (filters.status) {
-        filtered = filtered.filter((c) => c.globalStatus === filters.status);
-      }
-      if (filters.listId) {
-        const selectedList = INITIAL_LISTS.find((l) => l.id === filters.listId);
-        if (selectedList) {
-          filtered = filtered.filter((c) => c.list === selectedList.listName);
-        }
-      }
+const ALL_CONTACTS = buildFullDataset();
 
-      const start = (filters.page - 1) * filters.limit;
-      const paged = filtered.slice(start, start + filters.limit);
-
-      setTotal(filtered.length);
-      setTotalPages(Math.ceil(filtered.length / filters.limit));
-      // We don't store filtered contacts in state, they are derived.
-      // Instead, we store the full contact list and compute paged view on the fly.
-      // For simplicity, we will maintain a separate `filteredContacts` state.
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [contacts, filters]);
-
-  // Compute displayed contacts based on filters and pagination
-  const getDisplayedContacts = useCallback(() => {
-    let filtered = [...contacts];
-    if (filters.q) {
-      const q = filters.q.toLowerCase();
-      filtered = filtered.filter(
-        (c) =>
-          c.fullName.toLowerCase().includes(q) ||
-          (c.email && c.email.toLowerCase().includes(q)) ||
-          (c.phoneNumber && c.phoneNumber.includes(q))
-      );
-    }
-    if (filters.status) {
-      filtered = filtered.filter((c) => c.globalStatus === filters.status);
-    }
-    if (filters.listId) {
-      const selectedList = INITIAL_LISTS.find((l) => l.id === filters.listId);
-      if (selectedList) {
-        filtered = filtered.filter((c) => c.list === selectedList.listName);
-      }
-    }
-    const start = (filters.page - 1) * filters.limit;
-    return filtered.slice(start, start + filters.limit);
-  }, [contacts, filters.q, filters.status, filters.listId, filters.page, filters.limit]);
-
-  const displayedContacts = getDisplayedContacts();
-  const displayedTotal = (() => {
-    let filtered = [...contacts];
-    if (filters.q) filtered = filtered.filter(c => c.fullName.toLowerCase().includes(filters.q.toLowerCase()) || (c.email && c.email.toLowerCase().includes(filters.q.toLowerCase())));
-    if (filters.status) filtered = filtered.filter(c => c.globalStatus === filters.status);
-    if (filters.listId) {
-      const selectedList = INITIAL_LISTS.find(l => l.id === filters.listId);
-      if (selectedList) filtered = filtered.filter(c => c.list === selectedList.listName);
-    }
-    return filtered.length;
-  })();
-
-  const setFilter = useCallback((key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
-  }, []);
-
-  // Mutations
-  const deleteContacts = useCallback((ids) => {
-    setContacts(prev => prev.filter(c => !ids.includes(c.id)));
-    console.log(`[Contacts] Deleted ${ids.length} contacts`);
-  }, []);
-
-  const addContacts = useCallback((newContacts) => {
-    setContacts(prev => [...newContacts, ...prev]);
-    console.log(`[Contacts] Added ${newContacts.length} contacts`);
-  }, []);
-
-  const applyTagToSelected = useCallback((ids, tag) => {
-    setContacts(prev => prev.map(c => 
-      ids.includes(c.id) 
-        ? { ...c, tags: [...c.tags, tag] }
-        : c
-    ));
-    console.log(`[Contacts] Applied tag "${tag}" to ${ids.length} contacts`);
-  }, []);
-
-  return {
-    contacts: displayedContacts,
-    total: displayedTotal,
-    totalPages: totalPages,
-    isLoading,
-    filters,
-    setFilter,
-    deleteContacts,
-    addContacts,
-    applyTagToSelected,
-  };
-};
-
-const useListAll = () => ({ data: INITIAL_LISTS });
-
-// ===================== Utility Functions =====================
-const cn = (...classes) => classes.filter(Boolean).join(' ');
-const formatNumber = (num) => (num != null ? num.toLocaleString() : '—');
-
-// ===================== Icons =====================
+/* ─── ICONS ──────────────────────────────────────────────────────── */
+const SearchIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="11" cy="11" r="8" />
+    <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
+  </svg>
+);
 const UploadIcon = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 12V4m0 0l-3 3m3-3l3 3" strokeLinecap="round" />
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0 0l-4-4m4 4l4-4" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
-const PlusIcon = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 4v16m8-8H4" strokeLinecap="round" />
+const ImportIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0 0l-4-4m4 4l4-4" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const ChevLeft = () => (
+  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const ChevRight = () => (
+  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+    <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const DotsIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+    <circle cx="5" cy="12" r="2" />
+    <circle cx="12" cy="12" r="2" />
+    <circle cx="19" cy="12" r="2" />
   </svg>
 );
 
-// ===================== UI Components =====================
-const Avatar = ({ name, size = 'sm' }) => {
-  const initials = name
-    ? name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
-    : '?';
-  const sizeClass = size === 'sm' ? 'h-8 w-8 text-xs' : 'h-10 w-10 text-sm';
+/* ─── SUB-COMPONENTS ─────────────────────────────────────────────── */
+const Avatar = ({ name, ci }) => {
+  const ini = (name || "?")
+    .split(" ")
+    .map(n => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+  const [from, to] = AVATAR_COLORS[ci % AVATAR_COLORS.length];
   return (
-    <div
-      className={`rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-semibold ${sizeClass}`}
-    >
-      {initials}
+    <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+         style={{ background: `linear-gradient(135deg,${from},${to})` }}>
+      {ini}
     </div>
   );
 };
 
-const Badge = ({ children, variant, dot }) => {
-  const variants = {
-    active: 'bg-emerald-100 text-emerald-700',
-    suppressed: 'bg-red-100 text-red-700',
-  };
-  const style = variants[variant] || 'bg-slate-100 text-slate-700';
+const StatusBadge = ({ status }) => {
+  const active = status === "active";
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${style}`}
-    >
-      {dot && <span className="h-1.5 w-1.5 rounded-full bg-current" />}
-      {children}
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold
+      ${active ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"}`}>
+      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+      {active ? "Active" : "Suppressed"}
     </span>
   );
 };
 
-const Tag = ({ label }) => (
-  <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+const TagChip = ({ label }) => (
+  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full border border-slate-200 text-xs font-semibold text-slate-600 bg-white">
     {label}
   </span>
 );
 
-const ContactEngagementBar = ({ score }) => {
-  let barColor = 'bg-amber-400';
-  let textColor = 'text-amber-600';
-  if (score >= 70) {
-    barColor = 'bg-emerald-500';
-    textColor = 'text-emerald-600';
-  } else if (score >= 40) {
-    barColor = 'bg-indigo-500';
-    textColor = 'text-indigo-600';
-  }
-  return (
-    <div className="flex items-center gap-2">
-      <div className="h-1.5 w-14 rounded-full bg-slate-200 overflow-hidden">
-        <div
-          className={`h-full rounded-full ${barColor}`}
-          style={{ width: `${score}%` }}
-        />
-      </div>
-      <span className={`text-xs font-bold ${textColor}`}>{score}</span>
-    </div>
-  );
-};
-
-const Button = ({ children, variant, leftIcon, size, onClick, disabled }) => {
-  const base =
-    'inline-flex items-center gap-1.5 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed';
-  const variants = {
-    primary:
-      'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500',
-    secondary:
-      'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus:ring-slate-300',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
-  };
-  const sizes = { sm: 'px-2.5 py-1 text-xs', md: 'px-3 py-1.5 text-sm' };
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        base,
-        variants[variant] || variants.secondary,
-        sizes[size] || sizes.md
-      )}
-    >
-      {leftIcon && leftIcon}
-      {children}
-    </button>
-  );
-};
-
-const PageHeader = ({ title, description, action }) => (
-  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-    <div>
-      <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
-      {description && <p className="text-sm text-slate-500 mt-1">{description}</p>}
-    </div>
-    {action && <div className="flex flex-wrap gap-2">{action}</div>}
-  </div>
+const ListBadge = ({ list }) => (
+  <span className="inline-flex items-center px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 bg-white whitespace-nowrap">
+    {list}
+  </span>
 );
 
-const SearchInput = ({ placeholder, onSearch, className }) => {
-  const [value, setValue] = useState('');
-  useEffect(() => {
-    const timer = setTimeout(() => onSearch(value || null), 300);
-    return () => clearTimeout(timer);
-  }, [value, onSearch]);
+const EngBar = ({ score }) => {
+  const cls = score >= 70 ? { bar: "bg-emerald-500", text: "text-emerald-600" }
+            : score >= 40 ? { bar: "bg-indigo-500",  text: "text-indigo-500"  }
+            : score > 0   ? { bar: "bg-amber-400",   text: "text-amber-500"   }
+            : { bar: "bg-slate-200",   text: "text-slate-400" };
   return (
-    <input
-      type="text"
-      placeholder={placeholder}
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-      className={cn(
-        'border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500',
-        className
-      )}
-    />
-  );
-};
-
-const Pagination = ({ page, totalPages, totalItems, limit, onPageChange }) => {
-  if (totalPages <= 1) return null;
-  return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-t border-slate-100 bg-slate-50">
-      <p className="text-sm text-slate-500 order-1 sm:order-none">
-        Showing {(page - 1) * limit + 1} to {Math.min(page * limit, totalItems)} of{' '}
-        {totalItems}
-      </p>
-      <div className="flex gap-1 order-2 sm:order-none">
-        <button
-          onClick={() => onPageChange(page - 1)}
-          disabled={page === 1}
-          className="px-2 py-1 rounded border border-slate-200 text-sm disabled:opacity-50 hover:bg-slate-100"
-        >
-          ← Prev
-        </button>
-        <span className="px-3 py-1 text-sm text-slate-600">
-          {page} / {totalPages}
-        </span>
-        <button
-          onClick={() => onPageChange(page + 1)}
-          disabled={page === totalPages}
-          className="px-2 py-1 rounded border border-slate-200 text-sm disabled:opacity-50 hover:bg-slate-100"
-        >
-          Next →
-        </button>
+    <div className="flex items-center gap-2.5">
+      <div className="w-16 h-1.5 rounded-full bg-slate-200 overflow-hidden">
+        <div className={`h-full rounded-full ${cls.bar}`} style={{ width: `${score}%` }} />
       </div>
+      <span className={`text-xs font-black ${cls.text}`}>{score}</span>
     </div>
   );
 };
 
-const DataTable = ({
-  data,
-  columns,
-  isLoading,
-  selectable,
-  selected,
-  onSelectionChange,
-  emptyTitle,
-  emptyDescription,
-  emptyAction,
-}) => {
-  const handleSelectAll = (e) => {
-    if (e.target.checked) onSelectionChange(data.map((row) => row.id));
-    else onSelectionChange([]);
-  };
-  const handleSelectRow = (id) => {
-    if (selected.includes(id))
-      onSelectionChange(selected.filter((i) => i !== id));
-    else onSelectionChange([...selected, id]);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="p-8 text-center">
-        <div className="animate-spin h-6 w-6 border-2 border-indigo-500 border-t-transparent rounded-full inline-block"></div>
-        <p className="text-sm text-slate-500 mt-2">Loading contacts...</p>
-      </div>
-    );
-  }
-  if (data.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-lg font-semibold text-slate-800">{emptyTitle}</p>
-        <p className="text-sm text-slate-500">{emptyDescription}</p>
-        {emptyAction && <div className="mt-4">{emptyAction}</div>}
-      </div>
-    );
-  }
-
-  const visibleCols = columns.filter((col) => !col.hideOnMobile);
-  const mobileHiddenCols = columns.filter((col) => col.hideOnMobile);
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-slate-100 bg-slate-50">
-            {selectable && (
-              <th className="px-4 py-3 w-8">
-                <input
-                  type="checkbox"
-                  checked={selected.length === data.length && data.length > 0}
-                  onChange={handleSelectAll}
-                  className="rounded border-slate-300"
-                />
-              </th>
-            )}
-            {visibleCols.map((col) => (
-              <th
-                key={col.key}
-                className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wide"
-              >
-                {col.header}
-              </th>
-            ))}
-            {mobileHiddenCols.length > 0 && (
-              <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wide hidden sm:table-cell">
-                Details
-              </th>
-            )}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-          {data.map((row) => (
-            <tr key={row.id} className="hover:bg-slate-50 transition-colors">
-              {selectable && (
-                <td className="px-4 py-3">
-                  <input
-                    type="checkbox"
-                    checked={selected.includes(row.id)}
-                    onChange={() => handleSelectRow(row.id)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="rounded border-slate-300"
-                  />
-                </td>
-              )}
-              {visibleCols.map((col) => {
-                let content = col.render ? col.render(row) : row[col.key];
-                if (!col.render && col.key === 'fullName')
-                  content = <div className="font-semibold">{row.fullName}</div>;
-                return (
-                  <td key={col.key} className="px-4 py-3 whitespace-nowrap">
-                    {content}
-                  </td>
-                );
-              })}
-              {mobileHiddenCols.length > 0 && (
-                <td className="px-4 py-3 hidden sm:table-cell">
-                  <div className="flex flex-col gap-1">
-                    {mobileHiddenCols.map((col) => (
-                      <div key={col.key} className="text-xs">
-                        <span className="font-semibold text-slate-400">
-                          {col.header}:
-                        </span>{' '}
-                        {col.render ? col.render(row) : row[col.key]}
-                      </div>
-                    ))}
-                  </div>
-                </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
-
-// ===================== Main ContactsPage =====================
+/* ─── MAIN PAGE ──────────────────────────────────────────────────── */
 export default function ContactsPage() {
-  const { contacts, total, totalPages, isLoading, filters, setFilter, deleteContacts, addContacts, applyTagToSelected } = useContacts();
-  const { data: lists = [] } = useListAll();
-  const [selected, setSelected] = useState([]);
+  const [contacts, setContacts] = useState(ALL_CONTACTS);
+  const [search, setSearch] = useState("");
+  const [listFilter, setListFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [channelFilter, setChannelFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState(new Set());
+  const LIMIT = 10;
 
-  const handleSearch = useCallback((q) => {
-    setFilter('q', q);
-  }, [setFilter]);
+  // Reset page when any filter changes
+  useEffect(() => setPage(1), [search, listFilter, statusFilter, channelFilter]);
 
-  // Export all filtered contacts as CSV
-  const handleExport = () => {
-    if (contacts.length === 0) {
-      alert('No contacts to export');
-      return;
+  // Filtered contacts – case-insensitive search on name, email, phone, tags
+  const filtered = useMemo(() => {
+    let result = contacts;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter(c =>
+        c.fullName.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q) ||
+        c.phone.includes(q) ||
+        c.tags.some(tag => tag.toLowerCase().includes(q))
+      );
     }
-    const headers = ['Full Name', 'Email', 'Phone', 'Status', 'Tags', 'Engagement Score', 'Last Campaign', 'List'];
-    const rows = contacts.map(c => [
-      c.fullName,
-      c.email || '',
-      c.phoneNumber || '',
-      c.globalStatus,
-      c.tags.join(', '),
-      c.engagementScore,
-      c.lastCampaign || '',
-      c.list,
-    ]);
-    const csvContent = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `contacts_export_${new Date().toISOString().slice(0,19)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+    if (listFilter) result = result.filter(c => c.list === listFilter);
+    if (statusFilter) result = result.filter(c => c.status === statusFilter);
+    // Demo channel eligibility: "email" = all, "whatsapp" = engagement > 50
+    if (channelFilter === "whatsapp") result = result.filter(c => c.score > 50);
+    return result;
+  }, [contacts, search, listFilter, statusFilter, channelFilter]);
 
-  // Import contacts from CSV file
+  const totalPages = Math.max(1, Math.ceil(filtered.length / LIMIT));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = filtered.slice((currentPage - 1) * LIMIT, currentPage * LIMIT);
+
+  const activeCount = contacts.filter(c => c.status === "active").length;
+  const suppCount = contacts.filter(c => c.status === "suppressed").length;
+
+  // Selection handlers
+  const toggleRow = (id) => {
+    setSelected(prev => {
+      const newSet = new Set(prev);
+      newSet.has(id) ? newSet.delete(id) : newSet.add(id);
+      return newSet;
+    });
+  };
+  const toggleAll = (e) => {
+    if (e.target.checked) setSelected(new Set(paginated.map(c => c.id)));
+    else setSelected(new Set());
+  };
+  const clearSel = () => setSelected(new Set());
+  const allChecked = paginated.length > 0 && paginated.every(c => selected.has(c.id));
+
+  // Bulk actions (demo)
+  const handleExport = () => {
+    const headers = ["Full Name","Email","Phone","Status","Tags","Score","List","Campaign"];
+    const rows = filtered.map(c => [c.fullName, c.email, c.phone, c.status, c.tags.join(";"), c.score, c.list, c.campaign]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(",")).join("\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    a.download = `contacts_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+  };
   const handleImport = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.csv';
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv";
     input.onchange = (e) => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (ev) => {
-        const text = ev.target.result;
-        const lines = text.split('\n').filter(l => l.trim());
-        if (lines.length < 2) {
-          alert('Invalid CSV file');
-          return;
-        }
-        const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
-        const newContacts = [];
+        const lines = ev.target.result.split("\n").filter(l => l.trim());
+        if (lines.length < 2) { alert("Invalid CSV"); return; }
+        const hdrs = lines[0].split(",").map(h => h.replace(/"/g, "").trim());
+        const newC = [];
         for (let i = 1; i < lines.length; i++) {
-          const values = lines[i].split(',').map(v => v.replace(/"/g, '').trim());
-          if (values.length < 2) continue;
-          const contact = {
-            id: `import_${Date.now()}_${i}`,
-            fullName: values[headers.indexOf('Full Name')] || values[0] || 'Unknown',
-            email: values[headers.indexOf('Email')] || '',
-            phoneNumber: values[headers.indexOf('Phone')] || '',
-            globalStatus: values[headers.indexOf('Status')] || 'active',
-            tags: values[headers.indexOf('Tags')] ? values[headers.indexOf('Tags')].split(',').map(t => t.trim()) : [],
-            engagementScore: parseInt(values[headers.indexOf('Engagement Score')]) || 50,
-            source: 'import',
-            lastCampaign: values[headers.indexOf('Last Campaign')] || '',
-            list: values[headers.indexOf('List')] || 'All Subscribers',
-          };
-          newContacts.push(contact);
+          const vals = lines[i].split(",").map(v => v.replace(/"/g, "").trim());
+          const name = vals[hdrs.indexOf("Full Name")] || vals[0] || "Unknown";
+          const email = vals[hdrs.indexOf("Email")] || "";
+          if (name && email) newC.push({
+            id: `imp_${Date.now()}_${i}`,
+            fullName: name,
+            email,
+            phone: vals[hdrs.indexOf("Phone")] || "",
+            status: vals[hdrs.indexOf("Status")] || "active",
+            tags: (vals[hdrs.indexOf("Tags")] || "").split(";").filter(Boolean),
+            score: parseInt(vals[hdrs.indexOf("Score")]) || 50,
+            list: vals[hdrs.indexOf("List")] || "All Subscribers",
+            campaign: vals[hdrs.indexOf("Campaign")] || "—",
+            ci: 0,
+          });
         }
-        if (newContacts.length) {
-          addContacts(newContacts);
-          alert(`Imported ${newContacts.length} contacts`);
-        } else {
-          alert('No valid contacts found in CSV');
-        }
+        if (newC.length) {
+          setContacts(prev => [...newC, ...prev]);
+          alert(`Imported ${newC.length} contacts`);
+        } else alert("No valid contacts found");
       };
       reader.readAsText(file);
     };
     input.click();
   };
-
   const handleAddToList = () => {
-    if (selected.length === 0) return alert('No contacts selected');
-    alert(`Add ${selected.length} contacts to list (demo)`);
+    if (!selected.size) return alert("No contacts selected");
+    alert(`Add ${selected.size} contacts to list (demo)`);
   };
-
   const handleApplyTag = () => {
-    if (selected.length === 0) return alert('No contacts selected');
-    const tag = prompt('Enter tag name:');
-    if (tag && tag.trim()) {
-      applyTagToSelected(selected, tag.trim());
-      alert(`Tag "${tag}" applied to ${selected.length} contacts`);
+    if (!selected.size) return alert("No contacts selected");
+    const tag = prompt("Enter tag name:");
+    if (tag?.trim()) {
+      setContacts(prev => prev.map(c => selected.has(c.id) ? { ...c, tags: [...c.tags, tag.trim()] } : c));
+      alert(`Tag "${tag.trim()}" applied to ${selected.size} contacts`);
+      clearSel();
     }
   };
-
   const handleDelete = () => {
-    if (selected.length === 0) return alert('No contacts selected');
-    if (window.confirm(`Delete ${selected.length} contacts permanently?`)) {
-      deleteContacts(selected);
-      setSelected([]);
+    if (!selected.size) return alert("No contacts selected");
+    if (window.confirm(`Delete ${selected.size} contacts permanently?`)) {
+      setContacts(prev => prev.filter(c => !selected.has(c.id)));
+      clearSel();
     }
   };
 
-  const STATUS_OPTIONS = [
-    { value: '', label: 'All Status' },
-    { value: 'active', label: 'Active' },
-    { value: 'suppressed', label: 'Suppressed' },
-  ];
+  // Pagination buttons
+  const pageButtons = useMemo(() => {
+    const btns = [];
+    if (totalPages <= 7) for (let i = 1; i <= totalPages; i++) btns.push(i);
+    else {
+      btns.push(1);
+      if (currentPage > 3) btns.push("...");
+      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) btns.push(i);
+      if (currentPage < totalPages - 2) btns.push("...");
+      btns.push(totalPages);
+    }
+    return btns;
+  }, [currentPage, totalPages]);
 
-  const COLUMNS = [
-    {
-      key: 'fullName',
-      header: 'Contact',
-      render: (row) => (
-        <div className="flex items-center gap-2.5">
-          <Avatar name={row.fullName} size="sm" />
-          <div>
-            <p className="font-semibold text-slate-800 leading-tight">{row.fullName}</p>
-            <p className="text-xs text-slate-400 mt-0.5">{row.email || row.phoneNumber || '—'}</p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: 'globalStatus',
-      header: 'Status',
-      render: (row) => <Badge variant={row.globalStatus} dot>{row.globalStatus}</Badge>,
-    },
-    {
-      key: 'tags',
-      header: 'Tags',
-      hideOnMobile: true,
-      render: (row) => (
-        <div className="flex gap-1 flex-wrap">
-          {row.tags.slice(0, 2).map(t => <Tag key={t} label={t} />)}
-          {row.tags.length > 2 && <Tag label={`+${row.tags.length - 2}`} />}
-        </div>
-      ),
-    },
-    {
-      key: 'engagementScore',
-      header: 'Engagement',
-      hideOnMobile: true,
-      render: (row) => <ContactEngagementBar score={row.engagementScore} />,
-    },
-    {
-      key: 'lastCampaign',
-      header: 'Last Campaign',
-      hideOnMobile: true,
-      render: (row) => <span className="text-xs text-slate-500">{row.lastCampaign || '—'}</span>,
-    },
-  ];
-
-  const activeCount = INITIAL_CONTACTS.filter(c => c.globalStatus === 'active').length;
-  const suppressedCount = INITIAL_CONTACTS.filter(c => c.globalStatus === 'suppressed').length;
+  const startItem = (currentPage - 1) * LIMIT + 1;
+  const endItem = Math.min(currentPage * LIMIT, filtered.length);
 
   return (
-    <div className="p-4 md:p-6 bg-slate-50 min-h-screen">
-      <PageHeader
-        title="All Contacts"
-        description={`${formatNumber(total)} total · ${activeCount} active · ${suppressedCount} suppressed`}
-        action={
-          <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" leftIcon={<UploadIcon />} onClick={handleExport}>Export</Button>
-            <Button variant="primary" leftIcon={<PlusIcon />} onClick={handleImport}>Import Contacts</Button>
-          </div>
-        }
-      />
+    <div className="p-6 bg-slate-50 min-h-screen font-[Plus_Jakarta_Sans]">
+      {/* HEADER */}
+      <div className="flex flex-wrap justify-between items-start gap-4 mb-6">
+        <div>
+          <h1 className="text-[26px] font-extrabold text-slate-900 leading-[1.2] tracking-[-0.02em]">
+            All Contacts
+          </h1>
+          <p className="text-sm text-slate-400 mt-1 font-medium">
+            {contacts.length.toLocaleString()} total · {activeCount.toLocaleString()} active · {suppCount.toLocaleString()} suppressed
+          </p>
+        </div>
+        <div className="flex gap-2.5">
+          <button onClick={handleExport} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition">
+            <UploadIcon /> Export
+          </button>
+          <button onClick={handleImport} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition">
+            <ImportIcon /> Import Contacts
+          </button>
+        </div>
+      </div>
 
-      {selected.length > 0 && (
-        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-2.5">
-          <span className="text-sm font-semibold text-indigo-700">{selected.length} selected</span>
-          <Button variant="secondary" size="sm" onClick={handleAddToList}>Add to List</Button>
-          <Button variant="secondary" size="sm" onClick={handleApplyTag}>Apply Tag</Button>
-          <Button variant="danger" size="sm" onClick={handleDelete}>Delete</Button>
-          <button className="ml-auto text-xs text-slate-500 hover:text-slate-700" onClick={() => setSelected([])}>Clear</button>
+      {/* BULK ACTION BAR */}
+      {selected.size > 0 && (
+        <div className="flex flex-wrap items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-2.5 mb-4">
+          <span className="text-sm font-bold text-indigo-700">{selected.size} selected</span>
+          <button onClick={handleAddToList} className="px-3 py-1 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50">Add to List</button>
+          <button onClick={handleApplyTag} className="px-3 py-1 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50">Apply Tag</button>
+          <button onClick={handleDelete} className="px-3 py-1 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700">Delete</button>
+          <button onClick={clearSel} className="ml-auto text-xs text-slate-400 hover:text-slate-600 font-medium">Clear</button>
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-        <div className="flex flex-wrap items-center gap-3 p-4 border-b border-slate-100">
-          <SearchInput placeholder="Search by name, email, phone…" onSearch={handleSearch} className="w-64" />
-          <select value={filters.listId ?? ''} onChange={(e) => setFilter('listId', e.target.value || null)} className="h-9 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      {/* CARD */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        {/* FILTERS */}
+        <div className="flex flex-wrap items-center gap-3 px-4 py-3.5 border-b border-slate-100">
+          {/* Search */}
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><SearchIcon /></span>
+            <input
+              type="text"
+              placeholder="Search by name, email, phone or tag"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-xl outline-none w-60 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+            />
+          </div>
+          {/* List filter */}
+          <select value={listFilter} onChange={(e) => setListFilter(e.target.value)}
+            className="py-2 pl-3 pr-8 text-sm border border-slate-200 rounded-xl bg-slate-50 text-slate-600 font-medium cursor-pointer">
             <option value="">All Lists</option>
-            {lists.map(l => <option key={l.id} value={l.id}>{l.listName}</option>)}
+            {["Active Customers","All Subscribers","Trial Users","VIP Customers"].map(l => <option key={l} value={l}>{l}</option>)}
           </select>
-          <select value={filters.status ?? ''} onChange={(e) => setFilter('status', e.target.value || null)} className="h-9 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          {/* Status filter */}
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+            className="py-2 pl-3 pr-8 text-sm border border-slate-200 rounded-xl bg-slate-50 text-slate-600 font-medium cursor-pointer">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="suppressed">Suppressed</option>
           </select>
-          <div className="ml-auto text-xs text-slate-400">Page {filters.page} | Limit {filters.limit}</div>
+          {/* Channel filter */}
+          <select value={channelFilter} onChange={(e) => setChannelFilter(e.target.value)}
+            className="py-2 pl-3 pr-8 text-sm border border-slate-200 rounded-xl bg-slate-50 text-slate-600 font-medium cursor-pointer">
+            <option value="all">All Channels</option>
+            <option value="email">Email eligible</option>
+            <option value="whatsapp">WhatsApp eligible</option>
+          </select>
+          <span className="ml-auto text-xs text-slate-400 font-medium">Page {currentPage} · {LIMIT} per page</span>
         </div>
 
-        <DataTable
-          data={contacts}
-          columns={COLUMNS}
-          isLoading={isLoading}
-          selectable
-          selected={selected}
-          onSelectionChange={setSelected}
-          emptyTitle="No contacts found"
-          emptyDescription="Try adjusting your search or filters."
-          emptyAction={<Button variant="primary" leftIcon={<UploadIcon />} onClick={handleImport}>Import Contacts</Button>}
-        />
+        {/* TABLE */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50">
+                <th className="px-4 py-3 w-10"><input type="checkbox" checked={allChecked} onChange={toggleAll} className="accent-indigo-600" /></th>
+                {["CONTACT","LISTS","STATUS","TAGS","ENGAGEMENT","LAST CAMPAIGN",""].map(h => (
+                  <th key={h} className="px-4 py-3 text-left text-xs font-bold text-slate-400 tracking-wider uppercase whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {paginated.length === 0 ? (
+                <tr><td colSpan={8} className="text-center py-16 text-slate-400 text-sm font-medium">No contacts found. Try adjusting your search or filters.</td></tr>
+              ) : (
+                paginated.map(c => (
+                  <tr key={c.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+                    <td className="px-4 py-3.5"><input type="checkbox" checked={selected.has(c.id)} onChange={() => toggleRow(c.id)} className="accent-indigo-600" /></td>
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <Avatar name={c.fullName} ci={c.ci} />
+                        <div>
+                          <p className="font-bold text-slate-800 text-sm leading-tight">{c.fullName}</p>
+                          <p className="text-xs text-slate-400 font-medium mt-0.5">{c.email || c.phone || "—"}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3.5"><ListBadge list={c.list} /></td>
+                    <td className="px-4 py-3.5"><StatusBadge status={c.status} /></td>
+                    <td className="px-4 py-3.5"><div className="flex gap-1.5 flex-wrap">{c.tags.slice(0,2).map(t => <TagChip key={t} label={t} />)}{c.tags.length > 2 && <TagChip label={`+${c.tags.length-2}`} />}</div></td>
+                    <td className="px-4 py-3.5"><EngBar score={c.score} /></td>
+                    <td className="px-4 py-3.5 text-sm text-slate-400 font-medium">{c.campaign || "—"}</td>
+                    <td className="px-3 py-3.5"><button className="text-slate-300 hover:text-slate-500 hover:bg-slate-100 rounded-lg p-1.5"><DotsIcon /></button></td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
-        <Pagination page={filters.page} totalPages={totalPages} totalItems={total} limit={filters.limit} onPageChange={(p) => setFilter('page', p)} />
+        {/* PAGINATION */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-t border-slate-100 bg-slate-50">
+          <p className="text-sm text-slate-400 font-medium">
+            Showing {filtered.length === 0 ? "0" : `${startItem}–${endItem}`} of {filtered.length.toLocaleString()} contacts
+          </p>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setPage(p => Math.max(1, p-1))} disabled={currentPage === 1}
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-100 disabled:opacity-40">
+              <ChevLeft />
+            </button>
+            {pageButtons.map((b, i) => b === "..." ? (
+              <span key={`e${i}`} className="w-8 h-8 flex items-center justify-center text-xs text-slate-400 font-semibold">…</span>
+            ) : (
+              <button key={b} onClick={() => setPage(b)}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg border text-xs font-bold transition-all
+                  ${currentPage === b ? "bg-indigo-600 text-white border-indigo-600" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-100"}`}>
+                {b}
+              </button>
+            ))}
+            <button onClick={() => setPage(p => Math.min(totalPages, p+1))} disabled={currentPage === totalPages}
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-100 disabled:opacity-40">
+              <ChevRight />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
