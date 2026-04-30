@@ -963,7 +963,7 @@ const KpiCard = ({ label, value, delta, subtitle }) => {
   
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-5 transition-all hover:shadow-md">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">{label}</p>
+     <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 mb-1">{label}</p>
       <p className="text-3xl font-bold text-slate-900 tracking-tight">{value}</p>
       {delta !== undefined && delta !== null && (
         <div className={cn(
@@ -979,10 +979,9 @@ const KpiCard = ({ label, value, delta, subtitle }) => {
   );
 };
 
-const TrendChart = ({ data, isLoading }) => {
-  const [tooltip, setTooltip] = useState(null);
+const TrendChart = ({ data, isLoading, channel }) => {
   const chartRef = useRef(null);
-  
+
   if (isLoading) {
     return (
       <div className="h-64 flex items-center justify-center">
@@ -993,155 +992,116 @@ const TrendChart = ({ data, isLoading }) => {
       </div>
     );
   }
-  
+
   if (!data.length) {
     return <div className="h-64 flex items-center justify-center text-slate-400">No data available</div>;
   }
-  
-  const maxSent = Math.max(...data.map(d => d.sent), 1);
-  const maxOpens = Math.max(...data.map(d => d.opens), 1);
-  const maxValue = Math.max(maxSent, maxOpens);
+
+  const maxValue = Math.max(
+    ...data.map(d => Math.max(d.sent, d.opens)),
+    1
+  );
+
   const height = 200;
   const width = 700;
-  
-  const getSentPoints = () => {
+
+  const getPoints = (key) => {
     return data.map((d, i) => {
       const x = (i / (data.length - 1)) * width;
-      const y = height - (d.sent / maxValue) * height;
-      return `${x},${y}`;
-    }).join(' ');
+      const y = height - (d[key] / maxValue) * height;
+      return [x, y];
+    });
   };
-  
-  const getOpensPoints = () => {
-    return data.map((d, i) => {
-      const x = (i / (data.length - 1)) * width;
-      const y = height - (d.opens / maxValue) * height;
-      return `${x},${y}`;
-    }).join(' ');
+
+  // ✅ Smooth curve generator (correct placement)
+  const smoothPath = (points) => {
+    let d = `M ${points[0][0]} ${points[0][1]}`;
+    for (let i = 1; i < points.length; i++) {
+      const [x, y] = points[i];
+      const [px, py] = points[i - 1];
+      const cx = (px + x) / 2;
+      const cy = (py + y) / 2;
+      d += ` Q ${px} ${py}, ${cx} ${cy}`;
+    }
+    return d;
   };
-  
-  const getSentArea = () => {
-    const points = data.map((d, i) => {
-      const x = (i / (data.length - 1)) * width;
-      const y = height - (d.sent / maxValue) * height;
-      return `${x},${y}`;
-    }).join(' ');
-    return `${points} ${width},${height} 0,${height}`;
-  };
-  
+
+  const sentPoints = getPoints("sent");
+  const openPoints = getPoints("opens");
+
+  const areaPath =
+    smoothPath(sentPoints) +
+    ` L ${width} ${height} L 0 ${height} Z`;
+
   return (
     <div className="relative" ref={chartRef}>
-      <svg viewBox={`0 0 ${width} ${height + 40}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
-        {/* Y-axis grid lines */}
-        {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
-          const y = height - (ratio * height);
-          const value = Math.round(maxValue * ratio);
+      <svg
+        viewBox={`0 0 ${width} ${height + 40}`}
+        className="w-full h-auto"
+      >
+        {/* Grid lines */}
+        {[0, 0.25, 0.5, 0.75, 1].map((r, i) => {
+          const y = height - r * height;
           return (
-            <g key={idx}>
-              <line x1="0" y1={y} x2={width} y2={y} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4,4" />
-              <text x={-5} y={y + 3} textAnchor="end" fontSize="10" fill="#94a3b8">{formatNumber(value)}</text>
-            </g>
+            <line
+              key={i}
+              x1="0"
+              y1={y}
+              x2={width}
+              y2={y}
+              stroke="#e2e8f0"
+              strokeDasharray="4,4"
+            />
           );
         })}
-        
-        {/* Sent Area Fill */}
-        <polygon
-          fill="url(#sentGradient)"
-          points={getSentArea()}
-          opacity="0.3"
-        />
-        
-        {/* Sent Line */}
-        <polyline
+
+        {/* Gradient */}
+        <defs>
+          <linearGradient id="sentGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#4F46E5" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#4F46E5" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+
+        {/* Area */}
+        <path d={areaPath} fill="url(#sentGradient)" />
+
+        {/* Smooth lines */}
+        <path
+          d={smoothPath(sentPoints)}
           fill="none"
           stroke="#4F46E5"
           strokeWidth="2.5"
-          points={getSentPoints()}
-          className="transition-all"
         />
-        
-        {/* Opens Line */}
-        <polyline
+
+        <path
+          d={smoothPath(openPoints)}
           fill="none"
           stroke="#059669"
           strokeWidth="2.5"
-          points={getOpensPoints()}
-          className="transition-all"
         />
-        
-        {/* Data points - Sent */}
-        {data.map((d, i) => {
-          const x = (i / (data.length - 1)) * width;
-          const y = height - (d.sent / maxValue) * height;
-          return (
-            <circle
-              key={`sent-${i}`}
-              cx={x}
-              cy={y}
-              r="3"
-              fill="#4F46E5"
-              stroke="white"
-              strokeWidth="1.5"
-              className="cursor-pointer hover:r-4 transition-all"
-              onMouseEnter={() => setTooltip({ x, y, data: d, type: 'sent' })}
-              onMouseLeave={() => setTooltip(null)}
-            />
-          );
-        })}
-        
-        {/* Data points - Opens */}
-        {data.map((d, i) => {
-          const x = (i / (data.length - 1)) * width;
-          const y = height - (d.opens / maxValue) * height;
-          return (
-            <circle
-              key={`opens-${i}`}
-              cx={x}
-              cy={y}
-              r="3"
-              fill="#059669"
-              stroke="white"
-              strokeWidth="1.5"
-              className="cursor-pointer hover:r-4 transition-all"
-              onMouseEnter={() => setTooltip({ x, y, data: d, type: 'opens' })}
-              onMouseLeave={() => setTooltip(null)}
-            />
-          );
-        })}
-        
-        {/* X-axis labels */}
+
+        {/* X labels */}
         {data.map((d, i) => {
           const x = (i / (data.length - 1)) * width;
           if (i % Math.ceil(data.length / 6) === 0 || i === data.length - 1) {
             return (
-              <text key={i} x={x} y={height + 15} textAnchor="middle" fontSize="10" fill="#94a3b8">
+              <text
+                key={i}
+                x={x}
+                y={height + 15}
+                textAnchor="middle"
+                fontSize="10"
+                fill="#94a3b8"
+              >
                 {d.date}
               </text>
             );
           }
           return null;
         })}
-        
-        <defs>
-          <linearGradient id="sentGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#4F46E5" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#4F46E5" stopOpacity="0.0" />
-          </linearGradient>
-        </defs>
       </svg>
-      
-      {/* Tooltip */}
-      {tooltip && (
-        <div
-          className="absolute bg-white border border-slate-200 rounded-lg shadow-lg p-2 text-xs z-10 pointer-events-none"
-          style={{ left: tooltip.x + 10, top: tooltip.y - 30 }}
-        >
-          <p className="font-semibold text-slate-800">{tooltip.data.date}</p>
-          <p className="text-indigo-600">Sends: {formatNumber(tooltip.data.sent)}</p>
-          <p className="text-emerald-600">Opens: {formatNumber(tooltip.data.opens)}</p>
-        </div>
-      )}
-      
+
       {/* Legend */}
       <div className="flex justify-center gap-6 mt-4">
         <div className="flex items-center gap-2">
@@ -1232,6 +1192,7 @@ const CampaignTable = ({ campaigns, isLoading, onExport }) => {
 // ===================== Main AnalyticsPage Component =====================
 export default function AnalyticsPage() {
   const [period, setPeriod] = useState('30');
+  const [channel, setChannel] = useState("all");
   const { overview, trendData, campaigns, isLoading } = useAnalyticsData(period);
 
   // Log component state
@@ -1306,13 +1267,14 @@ export default function AnalyticsPage() {
   const unsubscribes = 892;
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-6">
+    <div className="min-h-screen bg-slate-50 pt-3 px-4 md:px-6 pb-4">
+      
       <div className="max-w-[1400px] mx-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Analytics Overview</h1>
-            <p className="text-sm text-slate-500 mt-1">Workspace-level performance across all campaigns</p>
+            <h3 className="text-xl font-bold text-slate-900">Analytics Overview</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Workspace-level performance across all campaigns</p>
           </div>
           <div className="flex items-center gap-3">
             <PeriodTabs period={period} setPeriod={setPeriod} />
@@ -1347,18 +1309,35 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Trend Chart and Channel Breakdown */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
           {/* Trend Chart */}
-          <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-5">
-            <h3 className="text-sm font-bold text-slate-900 mb-4">
-              Sends & Opens — Last {period} Days
-            </h3>
-            <TrendChart data={trendData} isLoading={isLoading} />
+          <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-4">
+            
+            <div className="flex justify-between items-center mb-2">
+  <h3 className="text-xs font-semibold text-slate-800">
+    Sends, Opens & Clicks — Last {period} Days
+  </h3>
+
+  <select
+    value={channel}
+    onChange={(e) => setChannel(e.target.value)}
+    className="text-xs border border-slate-200 rounded-md px-2 py-1 bg-white"
+  >
+    <option value="all">All Channels</option>
+    <option value="email">Email</option>
+    <option value="whatsapp">WhatsApp</option>
+  </select>
+</div>
+            <TrendChart 
+  data={trendData} 
+  isLoading={isLoading} 
+  channel={channel}
+/>
           </div>
 
           {/* Channel Breakdown */}
-          <div className="bg-white rounded-xl border border-slate-200 p-5">
-            <h3 className="text-sm font-bold text-slate-900 mb-4">Channel Breakdown</h3>
+          <div className="bg-white rounded-lg border border-slate-200 p-4">
+            <h3 className="text-xs font-semibold text-slate-800 mb-3">Channel Breakdown</h3>
             
             {isLoading ? (
               <div className="space-y-4">
@@ -1410,24 +1389,37 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* Additional Metrics */}
-                <div className="pt-4 border-t border-slate-100">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">Hard Bounces</span>
-                    <span className="font-semibold text-red-600">{hardBounces.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-sm mt-2">
-                    <span className="text-slate-600">Unsubscribes</span>
-                    <span className="font-semibold text-amber-600">{unsubscribes.toLocaleString()}</span>
-                  </div>
-                </div>
+                <div className="pt-4 border-t border-slate-100 grid grid-cols-2 gap-3">
+  
+  {/* Hard Bounces Card */}
+  <div className="bg-slate-50 rounded-lg px-3 py-3 text-center">
+    <p className="text-lg font-bold text-red-600">
+      {hardBounces.toLocaleString()}
+    </p>
+    <p className="text-[11px] text-slate-500 mt-1">
+      Hard Bounces
+    </p>
+  </div>
+
+  {/* Unsubscribes Card */}
+  <div className="bg-slate-50 rounded-lg px-3 py-3 text-center">
+    <p className="text-lg font-bold text-amber-600">
+      {unsubscribes.toLocaleString()}
+    </p>
+    <p className="text-[11px] text-slate-500 mt-1">
+      Unsubscribes
+    </p>
+  </div>
+
+</div>
               </div>
             )}
           </div>
         </div>
 
         {/* Campaign Performance Table */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
             <h3 className="text-sm font-bold text-slate-900">Campaign Performance</h3>
             <Button variant="secondary" size="sm" leftIcon={<DownloadIcon />} onClick={handleExport}>
               Export
@@ -1437,5 +1429,6 @@ export default function AnalyticsPage() {
         </div>
       </div>
     </div>
+    
   );
 }
