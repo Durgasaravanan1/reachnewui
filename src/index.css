@@ -1,8 +1,88 @@
-/* ✅ FIRST: Google Font */
+/* ✅ Google Font – Plus Jakarta Sans (all weights) */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-/* ✅ THEN Tailwind */
+/* ✅ Tailwind CSS */
 @import "tailwindcss";
+
+/* ============================================
+   GLOBAL TYPOGRAPHY (base styles)
+   ============================================ */
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 400;           /* regular body text */
+  font-size: 14px;            /* base size */
+  line-height: 20px;          /* base line height */
+  color: oklch(0.704 0.04 256.788); /* slate-400 equivalent */
+}
+
+/* ============================================
+   CUSTOM UTILITY CLASSES (use anywhere)
+   ============================================ */
+
+/* Main headings – H1, H2, etc. */
+.heading,
+.h1,
+h1 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 26px;
+  color: rgb(15, 23, 42);          /* slate-900 */
+  letter-spacing: -0.01em;
+  margin: 0 0 0.5rem 0;
+}
+
+/* Secondary headings / side‑panel titles */
+.side-heading,
+.sidebar-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 19px;
+  color: rgb(203, 213, 225);       /* slate-300 */
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Optional: Small text (captions, timestamps, meta) */
+.text-small,
+.caption {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 16px;
+  color: oklch(0.704 0.04 256.788);
+}
+
+/* Buttons & interactive elements – keep 500 weight by default */
+button,
+.button {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 500;
+}
+
+/* Links */
+a {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 500;
+}
+
+/* Table headers – use 600 weight for clarity */
+th {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+/* ============================================
+   EXAMPLE OVERRIDES (optional)
+   ============================================ */
+/* If you want all paragraph text to match the base body */
+p {
+  font-size: 14px;
+  line-height: 20px;
+  color: oklch(0.704 0.04 256.788);
 }
