@@ -172,6 +172,9 @@
     top: -4.5px;
     border: 5px solid transparent;
   }
+  body {
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
 
   &::before {
     left: 0;

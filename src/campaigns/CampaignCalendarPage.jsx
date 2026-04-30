@@ -737,10 +737,10 @@ const Button = ({ children, variant, size, leftIcon, rightIcon, onClick, disable
 };
 
 const PageHeader = ({ title, description, action }) => (
-  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
     <div>
-      <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
-      {description && <p className="text-sm text-slate-500 mt-1">{description}</p>}
+      <h1 className="text-xl font-semibold text-slate-900 leading-tight">{title}</h1>
+      {description && <p className="text-xs text-slate-500 mt-0.5">{description}</p>}
     </div>
     {action && <div className="flex flex-wrap gap-2">{action}</div>}
   </div>
@@ -845,7 +845,7 @@ export default function CampaignCalendarPage() {
   const weekNumber = getWeekNumber(currentDate);
 
   return (
-    <div className="p-4 md:p-6 bg-slate-50 min-h-screen">
+    <div className="pt-3 px-4 md:px-6 pb-4 bg-slate-50 min-h-screen scale-[1] origin-top">
       <PageHeader
         title="Campaign Calendar"
         description={`${format(currentDate, 'MMMM yyyy')} — scheduled and sent campaigns`}
@@ -883,16 +883,13 @@ export default function CampaignCalendarPage() {
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
         {/* Calendar Header with Navigation */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white">
-          <div className="flex gap-2">
-            <Button variant="secondary" size="sm" onClick={handleToday}>
-              Today
-            </Button>
-            <div className="flex gap-1">
-              <Button variant="ghost" size="sm" leftIcon={<ChevronLeftIcon />} onClick={handlePrev} />
-              <Button variant="ghost" size="sm" rightIcon={<ChevronRightIcon />} onClick={handleNext} />
-            </div>
-          </div>
-          <h2 className="text-xl font-bold text-slate-800">
+          <button
+  onClick={handlePrev}
+  className="text-sm px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+>
+  &lt; {format(subMonths(currentDate, 1), "MMMM")}
+</button>
+          <h2 className="text-lg font-semibold text-slate-800">
             {format(currentDate, viewMode === 'month' ? 'MMMM yyyy' : "'Week of' MMM d, yyyy")}
             {viewMode === 'week' && (
               <span className="text-sm font-normal text-slate-400 ml-2">
@@ -900,7 +897,13 @@ export default function CampaignCalendarPage() {
               </span>
             )}
           </h2>
-          <div className="w-24" /> {/* Spacer for alignment */}
+          {/* RIGHT - Next Month */}
+<button
+  onClick={handleNext}
+  className="text-sm px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+>
+  {format(addMonths(currentDate, 1), "MMMM")} &gt;
+</button> {/* Spacer for alignment */}
         </div>
 
         {/* Weekday Headers */}
@@ -928,7 +931,7 @@ export default function CampaignCalendarPage() {
                 return (
                   <div
                     key={`empty-${idx}`}
-                    className="min-h-[120px] bg-slate-50/30 border-b border-r border-slate-100 last:border-r-0"
+                    className="min-h-[95px] bg-slate-50/30 border-b border-r border-slate-100 last:border-r-0"
                   />
                 );
               }
@@ -941,7 +944,7 @@ export default function CampaignCalendarPage() {
                 <div
                   key={day.toISOString()}
                   className={cn(
-                    "min-h-[120px] p-2 border-b border-r border-slate-100 transition-colors",
+                    "min-h-[95px] p-2 border-b border-r border-slate-100 transition-colors",
                     !isCurrentMonth && viewMode === 'month' ? "bg-slate-50/30" : "bg-white",
                     isCurrentDay && "bg-amber-50",
                     "hover:bg-slate-50"
@@ -952,7 +955,7 @@ export default function CampaignCalendarPage() {
                       className={cn(
                         "inline-flex items-center justify-center h-7 w-7 rounded-full text-sm font-semibold",
                         isCurrentDay
-                          ? "bg-indigo-600 text-white shadow-sm"
+                          ? "bg-amber-100 text-amber-600 ring-1 ring-amber-300"
                           : isCurrentMonth || viewMode === 'week'
                             ? "text-slate-700"
                             : "text-slate-400"

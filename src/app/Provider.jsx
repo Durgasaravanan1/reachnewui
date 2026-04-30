@@ -1,8 +1,19 @@
 // Providers.jsx – No external dependencies (only React + Tailwind)
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // ===================== Toast System (self‑contained) =====================
 const ToastContext = createContext(null);
+const queryClient = new QueryClient();
+
+export default function Providers({ children }) {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>
+        {children}
+      </ToastProvider>
+    </QueryClientProvider>
+  );
+}
 
 export const useToast = () => {
   const context = useContext(ToastContext);
@@ -98,10 +109,3 @@ const ToastContainer = ({ toasts, setToasts }) => {
 // For now, we only provide the toast system.
 
 // ===================== Main Providers Component =====================
-export default function Providers({ children }) {
-  return (
-    <ToastProvider>
-      {children}
-    </ToastProvider>
-  );
-}

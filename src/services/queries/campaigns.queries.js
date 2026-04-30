@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
-import { campaignsApi } from '@/services/api/campaigns.api'
-
+// import { campaignsApi } from '@/services/api/campaigns.api'
+import { campaignsApi } from '../api/campaigns.api'
 // ── Query Key Factory ─────────────────────────────────────────────────────────
 export const campaignKeys = {
   all:       ['campaigns'],

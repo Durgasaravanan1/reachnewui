@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
-import { useCampaignList } from '@/services/queries/campaigns.queries';
-
+// import { useCampaignList } from '@/services/queries/campaigns.queries';
+import { useCampaignList } from '../../services/queries/campaigns.queries';
 export function useCampaigns() {
   const [searchParams, setSearchParams] = useSearchParams();
 
