@@ -317,10 +317,10 @@ export default function SettingsPage() {
       <div className="max-w-[1280px] mx-auto">
         {/* Header Section */}
         <div className="mb-10">
-          <h1 className="text-[28px] font-bold text-[#1e293b] font-['Plus_Jakarta_Sans']">
+         <h1 className="text-[25px] font-extrabold text-text-[#020617] tracking-tight font-['Plus_Jakarta_Sans']">
   Settings
 </h1>
-          <p className="text-[15px] text-slate-400 mt-1">
+          <p className="text-[15px] text-[#64748b] mt-0 tracking-tight font-['Plus_Jakarta_Sans']">
             Manage workspace configuration, sender identities, team, and integrations
           </p>
         </div>
