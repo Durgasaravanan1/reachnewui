@@ -795,11 +795,11 @@ export default function TeamMembersTab() {
 
   return (
     <>
-      <div className="bg-white rounded-[16px] border border-slate-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden max-w-[900px] mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-8 py-6">
+        <div className="flex items-center justify-between px-5 py-4">
           <div>
-            <h3 className="text-[18px] font-bold text-[#0F172A]">Team Members</h3>
+            <h3 className="text-[14px] font-extrabold text-[#0F172A]">Team Members</h3>
             <p className="text-[13px] text-slate-400 mt-1">{members.length} member{members.length !== 1 ? 's' : ''}</p>
           </div>
           <button 
@@ -815,21 +815,21 @@ export default function TeamMembersTab() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-50 bg-[#F8FAFC]/50">
-  <th className="px-8 py-4 text-[12px] font-bold text-slate-400 uppercase tracking-widest font-['Plus_Jakarta_Sans']">Member</th>
-  <th className="px-4 py-4 text-[12px] font-bold text-slate-400 uppercase tracking-widest font-['Plus_Jakarta_Sans']">Role</th>
-  <th className="px-4 py-4 text-[12px] font-bold text-slate-400 uppercase tracking-widest font-['Plus_Jakarta_Sans']">Status</th>
-  <th className="px-4 py-4 text-[12px] font-bold text-slate-400 uppercase tracking-widest font-['Plus_Jakarta_Sans']">Last Active</th>
-  <th className="px-8 py-4"></th>
+  <th className="px-5 py-2.5 text-[12px] font-extrabold text-slate-400 uppercase tracking-widest font-['Plus_Jakarta_Sans']">Member</th>
+  <th className="px-5 py-2.5 text-[12px] font-extrabold text-slate-400 uppercase tracking-widest font-['Plus_Jakarta_Sans']">Role</th>
+  <th className="px-5 py-2.5 text-[12px] font-extrabold text-slate-400 uppercase tracking-widest font-['Plus_Jakarta_Sans']">Status</th>
+  <th className="px-5 py-2.5 text-[12px] font-extrabold text-slate-400 uppercase tracking-widest font-['Plus_Jakarta_Sans']">Last Active</th>
+  <th className="px-5 py-2.5"></th>
 </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {members.map((member) => (
                 <tr key={member.id} className="hover:bg-slate-50/50 transition-colors relative">
-                  <td className="px-8 py-4">
+                  <td className="px-5 py-2.5">
                     <div className="flex items-center gap-4">
                       <Avatar name={member.name} color={member.color} />
                       <div>
-                        <p className="text-[15px] font-medium text-[#0b1220] leading-tight tracking-tight font-['Plus_Jakarta_Sans']">
+                        <p className="text-[15px] font-bold text-[#0b1220] leading-tight tracking-tight font-['Plus_Jakarta_Sans']">
   {member.name}
 </p>
                         <p className="text-[13px] text-slate-400 mt-1 tracking-tight font-['Plus_Jakarta_Sans']">
@@ -838,7 +838,7 @@ export default function TeamMembersTab() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="px-5 py-2.5">
                     <div className="relative">
                       {member.role === 'Owner' ? (
                         <Badge variant={member.role}>{member.role}</Badge>
@@ -868,19 +868,19 @@ export default function TeamMembersTab() {
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="px-5 py-2.5">
                     <Badge variant={member.status === 'active' ? 'active' : 'pending'} showCheck={member.status === 'active'}>
                       {member.status === 'active' ? 'Active' : 'Invite Pending'}
                     </Badge>
                   </td>
-                  <td className="px-4 py-4">
-                    <span className="text-[14px] text-slate-400 font-medium">{member.lastActive}</span>
+                  <td className="px-5 py-2.5">
+                    <span className="text-[14px] text-slate-400 font-bold">{member.lastActive}</span>
                   </td>
-                  <td className="px-8 py-4 text-right relative">
+                  <td className="px-5 py-2.5 text-right relative">
                     {member.status === 'pending' ? (
                       <button 
                         onClick={() => handleResendInvite(member.email, member.id)}
-                        className="text-[13px] font-normal text-[#475569] hover:text-[#0F172A] transition-colors"
+                        className="text-[13px] font-bold text-[#475569] hover:text-[#0F172A] transition-colors"
                       >
                         Resend
                       </button>
@@ -933,14 +933,14 @@ export default function TeamMembersTab() {
                 setInviteRole('Editor');
                 setInviteError('');
               }}
-              className="px-4 py-2 rounded-lg text-sm font-normal text-slate-600 hover:bg-slate-100 transition-colors"
+              className="px-4 py-2 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-100 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleInvite}
               disabled={isInviting}
-              className="px-4 py-2 rounded-lg text-sm font-normal bg-[#4F46E5] text-white hover:bg-[#4338CA] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 rounded-lg text-sm font-bold bg-[#4F46E5] text-white hover:bg-[#4338CA] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isInviting && <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full" />}
               Send Invite

@@ -295,7 +295,7 @@ import { Plus, X, Lightbulb } from 'lucide-react';
 const MOCK_WORKFLOWS = [
   {
     id: 'wf_1',
-    workflowName: '🎉 Welcome New Subscriber',
+    workflowName: 'Welcome New Subscriber',
     status: 'active',
     trigger: { type: 'contact_added_to_list', config: { listName: 'All Subscribers' } },
     action: { type: 'send_email_campaign', config: { campaign: 'Onboarding Welcome' }, cooldownHours: 0 },
@@ -304,7 +304,7 @@ const MOCK_WORKFLOWS = [
   },
   {
     id: 'wf_2',
-    workflowName: '🔄 Re-engagement Trigger',
+    workflowName: 'Re-engagement Trigger',
     status: 'active',
     trigger: { type: 'tag_applied', config: { tag: 'Inactive-90d' } },
     action: { type: 'add_to_list', config: { listName: 'Re-engagement campaign list' }, cooldownHours: 0 },
@@ -313,7 +313,7 @@ const MOCK_WORKFLOWS = [
   },
   {
     id: 'wf_3',
-    workflowName: '💬 Post-Demo WhatsApp Follow-up',
+    workflowName: 'Post-Demo WhatsApp Follow-up',
     status: 'active',
     trigger: { type: 'campaign_link_clicked', config: { link: 'Book a Demo' } },
     action: { type: 'send_whatsapp_campaign', config: { template: 'Demo Follow-up WhatsApp' }, cooldownHours: 0 },
@@ -322,7 +322,7 @@ const MOCK_WORKFLOWS = [
   },
   {
     id: 'wf_4',
-    workflowName: '⏸️ Trial Expiry Reminder',
+    workflowName: 'Trial Expiry Reminder',
     status: 'paused',
     trigger: { type: 'date_field', config: { dateField: 'trial_expiry', offset: '3 days before' } },
     action: { type: 'send_email_campaign', config: { campaign: 'Trial Expiry' }, cooldownHours: 0 },
@@ -368,7 +368,7 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const PageHeader = ({ title, description, action }) => (
   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
     <div>
-      <h1 className="text-3xl font-black tracking-tight text-slate-900 font-['Plus_Jakarta_Sans']">{title}</h1>
+      <h1 className="text-2xl font-black tracking-tight text-slate-900 font-['Plus_Jakarta_Sans']">{title}</h1>
       {description && <p className="text-sm text-slate-400 mt-1 font-normal">{description}</p>}
     </div>
     {action && <div>{action}</div>}
@@ -418,7 +418,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
         <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100">
-          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+          <h3 className="text-lg font-bold text-slate-600">{title}</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition">
             <X className="h-5 w-5" />
           </button>
@@ -601,7 +601,7 @@ export default function AutomationPage() {
           }
         />
 
-       <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6 flex gap-3 text-sm text-blue-900 font-normal font-['Plus_Jakarta_Sans']">
+       <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6 flex gap-3 text-sm text-blue-700 font-normal font-['Plus_Jakarta_Sans']">
           <p>💡V1 automation supports one trigger → one optional condition → one action. Multi-step sequences and branching workflows are coming in V2.</p>
         </div>
 

@@ -466,7 +466,8 @@ export default function IntegrationsTab() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-slate-50/50 border-y border-slate-100">
+              <tr className="bg-slate-100 border-y border-slate-200">
+              
                 <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">Key Name</th>
                 <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">Prefix</th>
                 <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">Scopes</th>
@@ -475,12 +476,12 @@ export default function IntegrationsTab() {
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y-2 divide-slate-200">
               {apiKeys.map((key) => (
                 <tr key={key.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-4 py-5 text-[14px] font-bold text-slate-700">{key.name}</td>
                   <td className="px-4 py-5 font-mono text-[13px] text-slate-500">{key.prefix}</td>
-                  <td className="px-4 py-5">
+                  <td className="px-6 py-5">
                     <div className="flex gap-2">
                       {key.scopes.map(s => <ScopeBadge key={s}>{s}</ScopeBadge>)}
                     </div>

@@ -149,13 +149,13 @@ const ProgressBar = ({ label, used, limit, icon }) => {
   const barColor = isOverLimit ? 'bg-[#C2410C]' : 'bg-[#4F46E5]';
   
   return (
-    <div className="mb-6">
-      <div className="flex justify-between items-center mb-2">
+    <div className="mb-2">
+      <div className="flex justify-between items-center mb-1">
         <div className="flex items-center gap-2">
           <span className="text-lg">{icon}</span>
-          <span className="text-[15px] font-bold text-slate-800">{label}</span>
+          <span className="text-[13px] font-bold text-slate-800">{label}</span>
         </div>
-        <span className="text-[15px] text-slate-400 font-medium">
+        <span className="text-[14px] text-slate-400 font-medium">
           {formatNumber(used)} / {formatNumber(limit)}
         </span>
       </div>
@@ -166,7 +166,7 @@ const ProgressBar = ({ label, used, limit, icon }) => {
         />
       </div>
       {isOverLimit && (
-        <p className="text-[13px] font-bold text-[#C2410C] mt-2 flex items-center gap-1">
+        <p className="text-[13px] font-bold text-[#C2410C] mt-1 flex items-center gap-1">
           ⚠ Limit reached — upgrade to continue.
         </p>
       )}
@@ -283,14 +283,14 @@ export default function BillingTab() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-4 ">
       {/* Current Plan Section */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
           <div>
-            <h3 className="text-[17px] font-bold text-slate-900">Current Plan</h3>
-            <p className="text-[15px] text-slate-400 mt-1">Renews on {billing.renewsAt}</p>
+            <h3 className="text-[14px] font-semibold text-slate-900">Current Plan</h3>
+            <p className="text-[12px] text-slate-400 mt-1">Renews on {billing.renewsAt}</p>
           </div>
           <Button variant="primary" leftIcon={<TrendingUpIcon />} onClick={handleUpgradeClick}>
             Upgrade Plan
@@ -298,17 +298,17 @@ export default function BillingTab() {
         </div>
 
         {/* Plan Banner */}
-        <div className="rounded-2xl bg-[#EEF2FF] px-8 py-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10">
+         <div className="rounded-2xl bg-[#EEF2FF] px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6"> 
           <div>
-            <p className="text-[13px] font-bold text-[#4F46E5] uppercase tracking-[0.1em] mb-2">
+            <p className="text-[12px] font-bold text-[#4F46E5] uppercase tracking-wide mb-1">
               {billing.planName}
             </p>
             <div className="flex items-baseline gap-1">
               <span className="text-3xl font-bold text-[#4F46E5]">{billing.currency}{billing.price}</span>
-              <span className="text-lg font-bold text-[#4F46E5]/70">/month</span>
+              <span className="text-sm font-semibold text-[#4F46E5]/70">/month</span>
             </div>
           </div>
-          <div className="text-left sm:text-right text-[15px] font-medium text-[#4F46E5]/80 space-y-1">
+          <div className="text-left sm:text-right text-[13px] font-medium text-[#4F46E5]/80 space-y-0.5">
             <p>{formatNumber(billing.emailsLimit)} emails/month</p>
             <p>{formatNumber(billing.whatsappLimit)} WhatsApp/month</p>
             <p>{formatNumber(billing.contactsLimit)} contacts</p>
@@ -316,7 +316,7 @@ export default function BillingTab() {
         </div>
 
         {/* Usage Meters */}
-        <div className="space-y-2">
+        <div className="space-y-1">
           <ProgressBar 
             label="Emails Sent" 
             icon="📧" 
@@ -415,7 +415,7 @@ export default function BillingTab() {
             })}
           </div>
           
-          <div className="mt-4 p-3 bg-slate-50 rounded-lg">
+          <div className="mt-2 p-3 bg-slate-50 rounded-lg">
             <p className="text-xs text-slate-500 text-center">
               All plans include unlimited team members, API access, and 24/7 support. 
               Prices are in INR and billed monthly. No hidden fees.

@@ -162,15 +162,15 @@ export default function NotificationsTab() {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-8 shadow-sm">
-      <div className="mb-8">
-        <h3 className="text-[17px] font-bold text-slate-900">Notification Preferences</h3>
+   <div className="bg-white rounded-2xl border border-slate-100 pt-6 pb-8 pl-4 pr-8 shadow-sm">
+      <div className="mb-4">
+        <h3 className="text-[15px] font-semibold text-slate-900">Notification Preferences</h3>
       </div>
       
       <div className="w-full">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-slate-50/50">
+            <tr className="bg-slate-100">
               <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                 Notification Type
               </th>
@@ -182,14 +182,14 @@ export default function NotificationsTab() {
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-200">
             {notificationTypes.map(notif => (
               <tr key={notif.id} className="group transition-colors">
-                <td className="px-4 py-6">
-                  <p className="font-bold text-[15px] text-slate-900">{notif.label}</p>
-                  <p className="text-[13px] text-slate-400 mt-0.5 font-medium">{notif.description}</p>
+                <td className="px-3 py-3">
+                  <p className="font-semibold text-[15px] text-slate-900">{notif.label}</p>
+                  <p className="text-[13px] text-slate-400 mt-0 ">{notif.description}</p>
                 </td>
-                <td className="px-4 py-6 text-center align-middle">
+                <td className="px-2 py-6 text-center align-middle">
                   <div className="flex justify-center">
                     <Toggle 
                       checked={preferences[notif.id]?.inApp} 

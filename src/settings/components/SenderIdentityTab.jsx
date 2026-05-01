@@ -235,7 +235,7 @@ const Button = ({ children, variant, onClick, className, disabled }) => {
     <button 
       onClick={onClick} 
       disabled={disabled}
-      className={cn("px-4 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed", variants[variant], className)}
+      className={cn("px-4 py-1.5 rounded-lg text-sm font-semibold font-['Plus_Jakarta_Sans'] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed", variants[variant], className)}
     >
       {children}
     </button>
@@ -249,7 +249,7 @@ const StatusBadge = ({ label, status }) => {
     active: "bg-emerald-50 text-emerald-600 border border-emerald-100",
   };
   return (
-    <span className={cn("px-2 py-0.5 rounded text-[11px] font-bold flex items-center gap-1", styles[status])}>
+    <span className={cn("px-2 py-0.5 rounded text-[11px] font-bold font-['Plus_Jakarta_Sans'] flex items-center gap-1", styles[status])}>
       {label} {status === 'verified' && '✓'}
     </span>
   );
@@ -262,7 +262,9 @@ const Modal = ({ isOpen, onClose, title, children }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
         <div className="flex justify-between items-center px-6 py-4 border-b">
-          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+        <h3 className="text-lg font-bold text-slate-900 font-['Plus_Jakarta_Sans']">
+  {title}
+</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
             <XIcon />
           </button>
@@ -399,12 +401,14 @@ export default function SenderIdentityTab() {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Email Sending Domains Section */}
-        <div className="bg-white rounded-3xl border border-slate-100 p-8 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
+        <div className="bg-white rounded-3xl border border-slate-100 px-4 py-4 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
             <div>
-              <h3 className="text-[16px] font-bold text-slate-900">Email Sending Domains</h3>
+             <h3 className="text-[14px] font-bold text-slate-900 font-['Plus_Jakarta_Sans']">
+  Email Sending Domains
+</h3>
             </div>
             <Button variant="primary" onClick={() => setShowAddDomain(true)}>
               <PlusIcon /> Add Domain
@@ -468,14 +472,18 @@ export default function SenderIdentityTab() {
         </div>
 
         {/* WhatsApp Business Section */}
-        <div className="bg-white rounded-3xl border border-slate-100 p-8 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
+        <div className="bg-white rounded-3xl border border-slate-100 px-4 py-4 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-[16px] font-bold text-slate-900">WhatsApp Business</h3>
+              <h3 className="text-[16px] font-bold text-slate-900 font-['Plus_Jakarta_Sans']">WhatsApp Business</h3>
             </div>
-            <Button variant="secondary" className="text-slate-500 font-medium border-slate-100" onClick={() => setShowLinkNumber(true)}>
-              Link Number
-            </Button>
+            <Button
+  variant="secondary"
+  className="text-slate-500 font-medium border-slate-100 font-['Plus_Jakarta_Sans']"
+  onClick={() => setShowLinkNumber(true)}
+>
+  Link Number
+</Button>
           </div>
 
           <div className="space-y-4">
@@ -486,7 +494,9 @@ export default function SenderIdentityTab() {
                     <ChatIcon />
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-800 text-[15px]">{wa.phoneNumber}</h4>
+                    <h4 className="font-semibold text-slate-800 text-[15px] tracking-tight font-['Plus_Jakarta_Sans']">
+  {wa.phoneNumber}
+</h4>
                     <p className="text-[13px] text-slate-400 mt-0.5">
                       {wa.accountName} · {wa.templates} approved templates
                     </p>
@@ -519,19 +529,23 @@ export default function SenderIdentityTab() {
 
       {/* Modal: Add Domain */}
       <Modal isOpen={showAddDomain} onClose={() => setShowAddDomain(false)} title="Add Email Sending Domain">
-        <div className="space-y-4">
+        <div className="space-y-2">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Domain</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-0 font-['Plus_Jakarta_Sans']">
+  Domain
+</label>
             <input
               type="text"
               value={domainForm.domain}
               onChange={(e) => setDomainForm(prev => ({ ...prev, domain: e.target.value }))}
               placeholder="example.com"
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">From Email</label>
+           <label className="block text-sm font-semibold text-slate-700 mb-1 font-['Plus_Jakarta_Sans']">
+  From Email
+</label>
             <input
               type="email"
               value={domainForm.fromEmail}
@@ -541,7 +555,9 @@ export default function SenderIdentityTab() {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Reply-to Email (optional)</label>
+           <label className="block text-sm font-semibold text-slate-700 mb-1 font-['Plus_Jakarta_Sans']">
+  Reply-to Email (optional)
+</label>
             <input
               type="email"
               value={domainForm.replyTo}
@@ -562,17 +578,21 @@ export default function SenderIdentityTab() {
       <Modal isOpen={showLinkNumber} onClose={() => setShowLinkNumber(false)} title="Link WhatsApp Business Number">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Phone Number (with country code)</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1 font-['Plus_Jakarta_Sans']">
+  Phone Number (with country code)
+</label>
             <input
               type="tel"
               value={waForm.phoneNumber}
               onChange={(e) => setWaForm(prev => ({ ...prev, phoneNumber: e.target.value }))}
               placeholder="+91 98400 12345"
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              className="w-full rounded-xl border border-slate-200 bg-white px-2 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">Account Name</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1 font-['Plus_Jakarta_Sans']">
+  Account Name
+</label>
             <input
               type="text"
               value={waForm.accountName}

@@ -300,11 +300,11 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] px-4 py-6">
+    <div className="min-h-screen bg-[#F8FAFC] px-2 pt-1 pb-4">
       <div className="max-w-[1200px] mx-auto">
         {/* Header Section */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#0F172A] tracking-tight">
+          <h1 className="text-2xl font-bold text-[#0F172A] tracking-tight font-['Plus_Jakarta_Sans']">
             Settings
           </h1>
           <p className="text-sm text-[#64748B] mt-1">
