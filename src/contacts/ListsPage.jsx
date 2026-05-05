@@ -1,72 +1,46 @@
 
 
+// // ListsPage.jsx – Exact UI from design (Audience Lists) – Tailwind only
+// // ListsPage.jsx – Complete with Archive functionality
+// import React, { useState } from 'react';
 
-// // ListsPage.jsx – Exact UI from design (Audience Lists)
-// import React, { useState, useEffect, useCallback, useRef } from 'react';
-
-// /* ================= LOAD FONT (Plus Jakarta Sans) – same as ContactsPage ================= */
-// const loadFont = () => {
-//   if (!document.querySelector('#jakarta-font-lists')) {
-//     const link = document.createElement('link');
-//     link.id = 'jakarta-font-lists';
-//     link.href = 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap';
-//     link.rel = 'stylesheet';
-//     document.head.appendChild(link);
-//   }
-//   if (!document.querySelector('#lists-font-style')) {
-//     const style = document.createElement('style');
-//     style.id = 'lists-font-style';
-//     style.textContent = `
-//       * { font-family: 'Plus Jakarta Sans', sans-serif; }
-//       .lists-heading {
-//         font-family: 'Plus Jakarta Sans', sans-serif !important;
-//         font-weight: 800 !important;
-//         font-size: 26px !important;
-//         line-height: 1.2 !important;
-//         color: rgb(15, 23, 42) !important;
-//         letter-spacing: -0.01em;
-//       }
-//       .table-header {
-//         font-weight: 600 !important;
-//         font-size: 12px !important;
-//         letter-spacing: 0.5px !important;
-//         color: #94a3b8 !important;
-//         text-transform: uppercase;
-//       }
-//       .list-name {
-//         font-weight: 700 !important;
-//         font-size: 14px !important;
-//         color: #0f172a !important;
-//       }
-//       .list-description {
-//         font-weight: 400 !important;
-//         font-size: 12px !important;
-//         color: #94a3b8 !important;
-//       }
-//       .stat-number {
-//         font-weight: 600 !important;
-//         font-size: 14px !important;
-//         color: #334155 !important;
-//       }
-//       .campaign-badge {
-//         font-weight: 600 !important;
-//         font-size: 12px !important;
-//       }
-//       .date-text {
-//         font-weight: 400 !important;
-//         font-size: 12px !important;
-//         color: #94a3b8 !important;
-//       }
-//       .button-text {
-//         font-weight: 600 !important;
-//         font-size: 14px !important;
-//       }
-//     `;
-//     document.head.appendChild(style);
-//   }
+// /* ================= UTILS ================= */
+// const cn = (...classes) => classes.filter(Boolean).join(' ');
+// const formatNumber = (num) => num?.toLocaleString() || '0';
+// const formatDate = (dateStr) => {
+//   const d = new Date(dateStr);
+//   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 // };
 
-// /* ================= MOCK DATA (based on screenshots) ================= */
+// /* ================= ICONS ================= */
+// const PlusIcon = () => (
+//   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+//     <path d="M12 4v16m8-8H4" strokeLinecap="round" />
+//   </svg>
+// );
+// const SearchIcon = () => (
+//   <svg className="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+//     <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeLinecap="round" />
+//   </svg>
+// );
+// const ArchiveIcon = () => (
+//   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+//     <path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8" strokeLinecap="round" />
+//   </svg>
+// );
+// const TrashIcon = () => (
+//   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+//     <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeLinecap="round" />
+//   </svg>
+// );
+// const RestoreIcon = () => (
+//   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+//     <path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0z" />
+//     <path d="M12 8v4l3 3M12 8v4l-3 3" strokeLinecap="round" />
+//   </svg>
+// );
+
+// /* ================= MOCK DATA ================= */
 // const MOCK_LISTS = [
 //   {
 //     id: '1',
@@ -121,7 +95,7 @@
 //   {
 //     id: '6',
 //     listName: 'Enterprise Accounts',
-//     description: 'High-value accounts',
+//     description: 'Enterprise clients',
 //     contactCount: 340,
 //     emailEligible: 340,
 //     waEligible: 290,
@@ -129,36 +103,6 @@
 //     lastUpdated: '2026-04-15T08:00:00Z',
 //   },
 // ];
-
-// /* ================= UTILS ================= */
-// const cn = (...classes) => classes.filter(Boolean).join(' ');
-// const formatNumber = (num) => num?.toLocaleString() || '0';
-// const formatDate = (dateStr) => {
-//   const d = new Date(dateStr);
-//   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-// };
-
-// /* ================= ICONS ================= */
-// const PlusIcon = () => (
-//   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-//     <path d="M12 4v16m8-8H4" strokeLinecap="round" />
-//   </svg>
-// );
-// const SearchIcon = () => (
-//   <svg className="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-//     <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeLinecap="round" />
-//   </svg>
-// );
-// const ArchiveIcon = () => (
-//   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-//     <path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8" strokeLinecap="round" />
-//   </svg>
-// );
-// const TrashIcon = () => (
-//   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-//     <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeLinecap="round" />
-//   </svg>
-// );
 
 // /* ================= UI COMPONENTS ================= */
 // const Button = ({ children, variant, leftIcon, onClick, disabled, loading, size = 'md' }) => {
@@ -212,9 +156,13 @@
 //   if (!open) return null;
 //   return (
 //     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
-//       <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl" onClick={(e) => e.stopPropagation()}>
-//         <div className="px-6 py-4 border-b border-slate-100"><h3 className="text-lg font-bold text-slate-900">{title}</h3></div>
-//         <div className="px-6 py-4"><p className="text-sm text-slate-600">{message}</p></div>
+//       <div className="bg-white rounded-2xl w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
+//         <div className="px-6 py-4 border-b border-slate-100">
+//           <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+//         </div>
+//         <div className="px-6 py-4">
+//           <p className="text-sm text-slate-600">{message}</p>
+//         </div>
 //         <div className="flex justify-end gap-2 px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-2xl">
 //           <Button variant="secondary" onClick={onClose} disabled={isLoading}>Cancel</Button>
 //           <Button variant="danger" onClick={onConfirm} loading={isLoading}>Confirm</Button>
@@ -226,23 +174,30 @@
 
 // /* ================= MAIN PAGE ================= */
 // export default function ListsPage() {
-//   useEffect(() => loadFont(), []);
-
 //   const [lists, setLists] = useState(MOCK_LISTS);
+//   const [archivedLists, setArchivedLists] = useState([]);
+//   const [activeTab, setActiveTab] = useState('active');
 //   const [searchTerm, setSearchTerm] = useState('');
 //   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 //   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 //   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
+//   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
 //   const [selectedList, setSelectedList] = useState(null);
 //   const [newListName, setNewListName] = useState('');
 //   const [newListDesc, setNewListDesc] = useState('');
 //   const [isCreating, setIsCreating] = useState(false);
 //   const [isDeleting, setIsDeleting] = useState(false);
 //   const [isArchiving, setIsArchiving] = useState(false);
+//   const [isRestoring, setIsRestoring] = useState(false);
 //   const [formError, setFormError] = useState('');
 
 //   // Filter lists based on search term
 //   const filteredLists = lists.filter(list =>
+//     list.listName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//     (list.description && list.description.toLowerCase().includes(searchTerm.toLowerCase()))
+//   );
+
+//   const filteredArchived = archivedLists.filter(list =>
 //     list.listName.toLowerCase().includes(searchTerm.toLowerCase()) ||
 //     (list.description && list.description.toLowerCase().includes(searchTerm.toLowerCase()))
 //   );
@@ -261,7 +216,6 @@
 //     }
 //     setFormError('');
 //     setIsCreating(true);
-//     // Simulate API delay
 //     await new Promise(resolve => setTimeout(resolve, 600));
 //     const newList = {
 //       id: Date.now().toString(),
@@ -302,20 +256,51 @@
 //     if (!selectedList) return;
 //     setIsArchiving(true);
 //     await new Promise(resolve => setTimeout(resolve, 500));
+    
+//     // Move to archived lists
+//     setArchivedLists(prev => [...prev, { ...selectedList, archivedAt: new Date().toISOString() }]);
 //     setLists(prev => prev.filter(l => l.id !== selectedList.id));
+    
 //     setIsArchiving(false);
 //     setIsArchiveModalOpen(false);
 //     setSelectedList(null);
 //   };
 
-//   const totalLists = filteredLists.length;
+//   const handleRestoreClick = (list) => {
+//     setSelectedList(list);
+//     setIsRestoreModalOpen(true);
+//   };
+
+//   const handleRestoreConfirm = async () => {
+//     if (!selectedList) return;
+//     setIsRestoring(true);
+//     await new Promise(resolve => setTimeout(resolve, 500));
+    
+//     // Move back to active lists
+//     setLists(prev => [...prev, { ...selectedList, archivedAt: undefined }]);
+//     setArchivedLists(prev => prev.filter(l => l.id !== selectedList.id));
+    
+//     setIsRestoring(false);
+//     setIsRestoreModalOpen(false);
+//     setSelectedList(null);
+//   };
+
+//   const handlePermanentDelete = (list) => {
+//     if (confirm(`Permanently delete "${list.listName}"? This action cannot be undone.`)) {
+//       setArchivedLists(prev => prev.filter(l => l.id !== list.id));
+//     }
+//   };
+
+//   const totalLists = activeTab === 'active' ? filteredLists.length : filteredArchived.length;
 
 //   return (
 //     <div className="p-4 md:p-6 bg-slate-50 min-h-screen">
 //       {/* HEADER */}
 //       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
 //         <div>
-//           <h1 className="lists-heading">Audience Lists</h1>
+//           <h1 className="text-[26px] font-extrabold text-slate-900 leading-tight tracking-[-0.01em]">
+//             Audience Lists
+//           </h1>
 //           <p className="text-sm text-slate-500 mt-1 font-normal">Manage your contact lists and audience segments</p>
 //         </div>
 //         <Button variant="primary" leftIcon={<PlusIcon />} onClick={handleCreateList}>
@@ -325,6 +310,39 @@
 
 //       {/* MAIN CARD */}
 //       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        
+//         {/* TAB SWITCHER - Active / Archived */}
+//         <div className="border-b border-slate-100 px-6 pt-2">
+//           <div className="flex gap-6">
+//             <button
+//               onClick={() => {
+//                 setActiveTab('active');
+//                 setSearchTerm('');
+//               }}
+//               className={`px-1 py-2.5 text-sm font-semibold transition-colors border-b-2 ${
+//                 activeTab === 'active'
+//                   ? 'border-indigo-600 text-indigo-600'
+//                   : 'border-transparent text-slate-500 hover:text-slate-700'
+//               }`}
+//             >
+//               Active Lists ({lists.length})
+//             </button>
+//             <button
+//               onClick={() => {
+//                 setActiveTab('archived');
+//                 setSearchTerm('');
+//               }}
+//               className={`px-1 py-2.5 text-sm font-semibold transition-colors border-b-2 ${
+//                 activeTab === 'archived'
+//                   ? 'border-indigo-600 text-indigo-600'
+//                   : 'border-transparent text-slate-500 hover:text-slate-700'
+//               }`}
+//             >
+//               Archived Lists ({archivedLists.length})
+//             </button>
+//           </div>
+//         </div>
+
 //         {/* SEARCH BAR & COUNT */}
 //         <div className="p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
 //           <SearchInput value={searchTerm} onChange={setSearchTerm} placeholder="Search lists..." />
@@ -338,59 +356,126 @@
 //           <table className="w-full text-sm">
 //             <thead>
 //               <tr className="border-b border-slate-100 bg-slate-50">
-//                 <th className="px-4 py-3 text-left table-header">LIST NAME</th>
-//                 <th className="px-4 py-3 text-left table-header">CONTACTS</th>
-//                 <th className="px-4 py-3 text-left table-header">EMAIL ELIGIBLE</th>
-//                 <th className="px-4 py-3 text-left table-header">WA ELIGIBLE</th>
-//                 <th className="px-4 py-3 text-left table-header">CAMPAIGNS</th>
-//                 <th className="px-4 py-3 text-left table-header">LAST UPDATED</th>
-//                 <th className="px-4 py-3 text-left table-header"></th>
+//                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">LIST NAME</th>
+//                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">CONTACTS</th>
+//                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">EMAIL ELIGIBLE</th>
+//                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">WA ELIGIBLE</th>
+//                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">CAMPAIGNS</th>
+//                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">LAST UPDATED</th>
+//                 <th className="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">ACTIONS</th>
 //               </tr>
 //             </thead>
 //             <tbody className="divide-y divide-slate-100">
-//               {filteredLists.map((list) => (
-//                 <tr key={list.id} className="hover:bg-slate-50 transition-colors group">
-//                   <td className="px-4 py-3">
-//                     <p className="list-name">{list.listName}</p>
-//                     {list.description && <p className="list-description mt-0.5">{list.description}</p>}
-//                   </td>
-//                   <td className="px-4 py-3 stat-number">{formatNumber(list.contactCount)}</td>
-//                   <td className="px-4 py-3 stat-number">{formatNumber(list.emailEligible)}</td>
-//                   <td className="px-4 py-3 stat-number">{formatNumber(list.waEligible)}</td>
-//                   <td className="px-4 py-3">
-//                     <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-indigo-50 text-indigo-600 campaign-badge">
-//                       {list.campaigns}
-//                     </span>
-//                   </td>
-//                   <td className="px-4 py-3 date-text">{formatDate(list.lastUpdated)}</td>
-//                   <td className="px-4 py-3">
-//                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-//                       <Button variant="ghost" size="icon" onClick={() => handleArchiveClick(list)} title="Archive list">
-//                         <ArchiveIcon />
-//                       </Button>
-//                       <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(list)} title="Delete list">
-//                         <TrashIcon />
-//                       </Button>
-//                     </div>
-//                   </td>
-//                 </tr>
-//               ))}
-//               {filteredLists.length === 0 && (
-//                 <tr>
-//                   <td colSpan="7" className="text-center py-12">
-//                     <p className="text-lg font-semibold text-slate-800">No lists found</p>
-//                     <p className="text-sm text-slate-500 mt-1">
-//                       {searchTerm ? `No results for "${searchTerm}"` : 'Create your first audience list'}
-//                     </p>
-//                     {!searchTerm && (
-//                       <div className="mt-4">
-//                         <Button variant="primary" leftIcon={<PlusIcon />} onClick={handleCreateList}>
-//                           Create List
-//                         </Button>
-//                       </div>
-//                     )}
-//                   </td>
-//                 </tr>
+//               {activeTab === 'active' ? (
+//                 // ACTIVE LISTS - Show Archive and Delete buttons
+//                 filteredLists.length === 0 ? (
+//                   <tr>
+//                     <td colSpan="7" className="text-center py-12">
+//                       <p className="text-base font-semibold text-slate-800">No active lists found</p>
+//                       <p className="text-sm text-slate-500 mt-1">
+//                         {searchTerm ? `No results for "${searchTerm}"` : 'Create your first audience list'}
+//                       </p>
+//                       {!searchTerm && (
+//                         <div className="mt-4">
+//                           <Button variant="primary" leftIcon={<PlusIcon />} onClick={handleCreateList}>
+//                             Create List
+//                           </Button>
+//                         </div>
+//                       )}
+//                     </td>
+//                   </tr>
+//                 ) : (
+//                   filteredLists.map((list) => (
+//                     <tr key={list.id} className="hover:bg-slate-50 transition-colors group">
+//                       <td className="px-4 py-3">
+//                         <p className="font-semibold text-sm text-slate-800">{list.listName}</p>
+//                         {list.description && <p className="text-xs text-slate-400 mt-0.5">{list.description}</p>}
+//                        </td>
+//                       <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.contactCount)}</td>
+//                       <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.emailEligible)}</td>
+//                       <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.waEligible)}</td>
+//                       <td className="px-4 py-3">
+//                         <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-indigo-50 text-indigo-600">
+//                           {list.campaigns}
+//                         </span>
+//                        </td>
+//                       <td className="px-4 py-3 text-xs text-slate-400">{formatDate(list.lastUpdated)}</td>
+//                       <td className="px-4 py-3 text-right">
+//                         <div className="flex items-center justify-end gap-1">
+//                           <Button 
+//                             variant="ghost" 
+//                             size="icon" 
+//                             onClick={() => handleArchiveClick(list)}
+//                             title="Archive list"
+//                           >
+//                             <ArchiveIcon />
+//                           </Button>
+//                           <Button 
+//                             variant="ghost" 
+//                             size="icon" 
+//                             onClick={() => handleDeleteClick(list)}
+//                             title="Delete list"
+//                           >
+//                             <TrashIcon />
+//                           </Button>
+//                         </div>
+//                        </td>
+//                     </tr>
+//                   ))
+//                 )
+//               ) : (
+//                 // ARCHIVED LISTS - Show Restore and Permanent Delete buttons
+//                 filteredArchived.length === 0 ? (
+//                   <tr>
+//                     <td colSpan="7" className="text-center py-12">
+//                       <p className="text-base font-semibold text-slate-800">No archived lists found</p>
+//                       <p className="text-sm text-slate-500 mt-1">
+//                         {searchTerm ? `No results for "${searchTerm}"` : 'Archived lists will appear here'}
+//                       </p>
+//                     </td>
+//                   </tr>
+//                 ) : (
+//                   filteredArchived.map((list) => (
+//                     <tr key={list.id} className="hover:bg-slate-50 transition-colors">
+//                       <td className="px-4 py-3">
+//                         <p className="font-semibold text-sm text-slate-800">{list.listName}</p>
+//                         {list.description && <p className="text-xs text-slate-400 mt-0.5">{list.description}</p>}
+//                         {list.archivedAt && (
+//                           <p className="text-xs text-amber-600 mt-1">Archived: {formatDate(list.archivedAt)}</p>
+//                         )}
+//                        </td>
+//                       <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.contactCount)}</td>
+//                       <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.emailEligible)}</td>
+//                       <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.waEligible)}</td>
+//                       <td className="px-4 py-3">
+//                         <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-slate-100 text-slate-500">
+//                           {list.campaigns}
+//                         </span>
+//                        </td>
+//                       <td className="px-4 py-3 text-xs text-slate-400">{formatDate(list.lastUpdated)}</td>
+//                       <td className="px-4 py-3 text-right">
+//                         <div className="flex items-center justify-end gap-2">
+//                           <Button 
+//                             variant="primary" 
+//                             size="sm" 
+//                             onClick={() => handleRestoreClick(list)}
+//                             title="Restore list"
+//                           >
+//                             Restore
+//                           </Button>
+//                           <Button 
+//                             variant="danger" 
+//                             size="sm" 
+//                             onClick={() => handlePermanentDelete(list)}
+//                             title="Permanently delete"
+//                           >
+//                             Delete
+//                           </Button>
+//                         </div>
+//                        </td>
+//                     </tr>
+//                   ))
+//                 )
 //               )}
 //             </tbody>
 //           </table>
@@ -435,7 +520,7 @@
 //         </div>
 //       </Modal>
 
-//       {/* DELETE CONFIRM MODAL */}
+//       {/* DELETE CONFIRM MODAL (for active lists) */}
 //       <ConfirmModal
 //         open={isDeleteModalOpen}
 //         onClose={() => setIsDeleteModalOpen(false)}
@@ -451,16 +536,26 @@
 //         onClose={() => setIsArchiveModalOpen(false)}
 //         onConfirm={handleArchiveConfirm}
 //         title="Archive List"
-//         message={`Are you sure you want to archive "${selectedList?.listName}"? You can restore it later from the archived lists section.`}
+//         message={`Archive "${selectedList?.listName}"? You can restore it later from the archived lists section.`}
 //         isLoading={isArchiving}
+//       />
+
+//       {/* RESTORE CONFIRM MODAL */}
+//       <ConfirmModal
+//         open={isRestoreModalOpen}
+//         onClose={() => setIsRestoreModalOpen(false)}
+//         onConfirm={handleRestoreConfirm}
+//         title="Restore List"
+//         message={`Restore "${selectedList?.listName}" to active lists?`}
+//         isLoading={isRestoring}
 //       />
 //     </div>
 //   );
 // }
 
 
-// ListsPage.jsx – Exact UI from design (Audience Lists) – Tailwind only
-// ListsPage.jsx – Complete with Archive functionality
+
+// ListsPage.jsx – Complete with Archive functionality + List Detail Modal
 import React, { useState } from 'react';
 
 /* ================= UTILS ================= */
@@ -482,6 +577,11 @@ const SearchIcon = () => (
     <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeLinecap="round" />
   </svg>
 );
+const XIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 const ArchiveIcon = () => (
   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8" strokeLinecap="round" />
@@ -496,6 +596,39 @@ const RestoreIcon = () => (
   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0z" />
     <path d="M12 8v4l3 3M12 8v4l-3 3" strokeLinecap="round" />
+  </svg>
+);
+const UsersIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+const MailIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="2" y="4" width="20" height="16" rx="2" />
+    <path d="m22 7-10 7L2 7" />
+  </svg>
+);
+const WhatsAppIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+  </svg>
+);
+const CalendarIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
+const CampaignIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M22 6L12 13 2 6M22 6v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6" />
+    <path d="M12 13l-10-6" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -631,6 +764,89 @@ const ConfirmModal = ({ open, onClose, onConfirm, title, message, isLoading }) =
   );
 };
 
+// ── List Detail Modal Component ──
+const ListDetailModal = ({ list, isOpen, onClose }) => {
+  if (!isOpen || !list) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="relative bg-gradient-to-r from-indigo-50 to-slate-50 p-6 rounded-t-2xl border-b border-slate-100">
+          <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+            <XIcon />
+          </button>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">{list.listName}</h2>
+            {list.description && <p className="text-sm text-slate-500 mt-1">{list.description}</p>}
+          </div>
+        </div>
+
+        {/* Details grid */}
+        <div className="p-6 space-y-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-start gap-3">
+              <UsersIcon />
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Total Contacts</p>
+                <p className="text-lg font-bold text-slate-900">{formatNumber(list.contactCount)}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <MailIcon />
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Email Eligible</p>
+                <p className="text-lg font-bold text-emerald-600">{formatNumber(list.emailEligible)}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <WhatsAppIcon />
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">WhatsApp Eligible</p>
+                <p className="text-lg font-bold text-green-600">{formatNumber(list.waEligible)}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <CampaignIcon />
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Campaigns Sent</p>
+                <p className="text-lg font-bold text-indigo-600">{list.campaigns}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 col-span-2">
+              <CalendarIcon />
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Last Updated</p>
+                <p className="text-sm text-slate-700">{formatDate(list.lastUpdated)}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-slate-100 pt-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Status</p>
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${list.archivedAt ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                  {list.archivedAt ? 'Archived' : 'Active'}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  onClose();
+                  // You can navigate to contacts filtered by this list or open campaign creation
+                }}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition"
+              >
+                View Contacts
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /* ================= MAIN PAGE ================= */
 export default function ListsPage() {
   const [lists, setLists] = useState(MOCK_LISTS);
@@ -649,6 +865,10 @@ export default function ListsPage() {
   const [isArchiving, setIsArchiving] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [formError, setFormError] = useState('');
+
+  // List detail modal state
+  const [detailList, setDetailList] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   // Filter lists based on search term
   const filteredLists = lists.filter(list =>
@@ -715,11 +935,8 @@ export default function ListsPage() {
     if (!selectedList) return;
     setIsArchiving(true);
     await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Move to archived lists
     setArchivedLists(prev => [...prev, { ...selectedList, archivedAt: new Date().toISOString() }]);
     setLists(prev => prev.filter(l => l.id !== selectedList.id));
-    
     setIsArchiving(false);
     setIsArchiveModalOpen(false);
     setSelectedList(null);
@@ -734,20 +951,22 @@ export default function ListsPage() {
     if (!selectedList) return;
     setIsRestoring(true);
     await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Move back to active lists
     setLists(prev => [...prev, { ...selectedList, archivedAt: undefined }]);
     setArchivedLists(prev => prev.filter(l => l.id !== selectedList.id));
-    
     setIsRestoring(false);
     setIsRestoreModalOpen(false);
     setSelectedList(null);
   };
 
   const handlePermanentDelete = (list) => {
-    if (confirm(`Permanently delete "${list.listName}"? This action cannot be undone.`)) {
+    if (window.confirm(`Permanently delete "${list.listName}"? This action cannot be undone.`)) {
       setArchivedLists(prev => prev.filter(l => l.id !== list.id));
     }
+  };
+
+  const openListDetail = (list) => {
+    setDetailList(list);
+    setIsDetailModalOpen(true);
   };
 
   const totalLists = activeTab === 'active' ? filteredLists.length : filteredArchived.length;
@@ -826,7 +1045,6 @@ export default function ListsPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {activeTab === 'active' ? (
-                // ACTIVE LISTS - Show Archive and Delete buttons
                 filteredLists.length === 0 ? (
                   <tr>
                     <td colSpan="7" className="text-center py-12">
@@ -846,25 +1064,25 @@ export default function ListsPage() {
                 ) : (
                   filteredLists.map((list) => (
                     <tr key={list.id} className="hover:bg-slate-50 transition-colors group">
-                      <td className="px-4 py-3">
-                        <p className="font-semibold text-sm text-slate-800">{list.listName}</p>
+                      <td className="px-4 py-3 cursor-pointer" onClick={() => openListDetail(list)}>
+                        <p className="font-semibold text-sm text-slate-800 hover:text-indigo-600 transition-colors">{list.listName}</p>
                         {list.description && <p className="text-xs text-slate-400 mt-0.5">{list.description}</p>}
-                       </td>
-                      <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.contactCount)}</td>
-                      <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.emailEligible)}</td>
-                      <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.waEligible)}</td>
-                      <td className="px-4 py-3">
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-sm text-slate-600" onClick={() => openListDetail(list)}>{formatNumber(list.contactCount)}</td>
+                      <td className="px-4 py-3 font-semibold text-sm text-slate-600" onClick={() => openListDetail(list)}>{formatNumber(list.emailEligible)}</td>
+                      <td className="px-4 py-3 font-semibold text-sm text-slate-600" onClick={() => openListDetail(list)}>{formatNumber(list.waEligible)}</td>
+                      <td className="px-4 py-3" onClick={() => openListDetail(list)}>
                         <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-indigo-50 text-indigo-600">
                           {list.campaigns}
                         </span>
-                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-400">{formatDate(list.lastUpdated)}</td>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-slate-400" onClick={() => openListDetail(list)}>{formatDate(list.lastUpdated)}</td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            onClick={() => handleArchiveClick(list)}
+                            onClick={(e) => { e.stopPropagation(); handleArchiveClick(list); }}
                             title="Archive list"
                           >
                             <ArchiveIcon />
@@ -872,18 +1090,17 @@ export default function ListsPage() {
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            onClick={() => handleDeleteClick(list)}
+                            onClick={(e) => { e.stopPropagation(); handleDeleteClick(list); }}
                             title="Delete list"
                           >
                             <TrashIcon />
                           </Button>
                         </div>
-                       </td>
+                      </td>
                     </tr>
                   ))
                 )
               ) : (
-                // ARCHIVED LISTS - Show Restore and Permanent Delete buttons
                 filteredArchived.length === 0 ? (
                   <tr>
                     <td colSpan="7" className="text-center py-12">
@@ -896,28 +1113,28 @@ export default function ListsPage() {
                 ) : (
                   filteredArchived.map((list) => (
                     <tr key={list.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-4 py-3">
-                        <p className="font-semibold text-sm text-slate-800">{list.listName}</p>
+                      <td className="px-4 py-3 cursor-pointer" onClick={() => openListDetail(list)}>
+                        <p className="font-semibold text-sm text-slate-800 hover:text-indigo-600 transition-colors">{list.listName}</p>
                         {list.description && <p className="text-xs text-slate-400 mt-0.5">{list.description}</p>}
                         {list.archivedAt && (
                           <p className="text-xs text-amber-600 mt-1">Archived: {formatDate(list.archivedAt)}</p>
                         )}
-                       </td>
-                      <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.contactCount)}</td>
-                      <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.emailEligible)}</td>
-                      <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.waEligible)}</td>
-                      <td className="px-4 py-3">
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-sm text-slate-600" onClick={() => openListDetail(list)}>{formatNumber(list.contactCount)}</td>
+                      <td className="px-4 py-3 font-semibold text-sm text-slate-600" onClick={() => openListDetail(list)}>{formatNumber(list.emailEligible)}</td>
+                      <td className="px-4 py-3 font-semibold text-sm text-slate-600" onClick={() => openListDetail(list)}>{formatNumber(list.waEligible)}</td>
+                      <td className="px-4 py-3" onClick={() => openListDetail(list)}>
                         <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-slate-100 text-slate-500">
                           {list.campaigns}
                         </span>
-                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-400">{formatDate(list.lastUpdated)}</td>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-slate-400" onClick={() => openListDetail(list)}>{formatDate(list.lastUpdated)}</td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button 
                             variant="primary" 
                             size="sm" 
-                            onClick={() => handleRestoreClick(list)}
+                            onClick={(e) => { e.stopPropagation(); handleRestoreClick(list); }}
                             title="Restore list"
                           >
                             Restore
@@ -925,13 +1142,13 @@ export default function ListsPage() {
                           <Button 
                             variant="danger" 
                             size="sm" 
-                            onClick={() => handlePermanentDelete(list)}
+                            onClick={(e) => { e.stopPropagation(); handlePermanentDelete(list); }}
                             title="Permanently delete"
                           >
                             Delete
                           </Button>
                         </div>
-                       </td>
+                      </td>
                     </tr>
                   ))
                 )
@@ -1007,6 +1224,13 @@ export default function ListsPage() {
         title="Restore List"
         message={`Restore "${selectedList?.listName}" to active lists?`}
         isLoading={isRestoring}
+      />
+
+      {/* LIST DETAIL MODAL */}
+      <ListDetailModal
+        list={detailList}
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
       />
     </div>
   );
