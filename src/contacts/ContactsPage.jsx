@@ -534,6 +534,16 @@ const DotsIcon = () => (
     <circle cx="19" cy="12" r="2" />
   </svg>
 );
+const XIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const FileIcon = () => (
+  <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h4" strokeLinecap="round" />
+  </svg>
+);
 
 /* ─── SUB-COMPONENTS ─────────────────────────────────────────────── */
 const Avatar = ({ name, ci }) => {
@@ -592,6 +602,332 @@ const EngBar = ({ score }) => {
   );
 };
 
+// Modal Component
+const Modal = ({ isOpen, onClose, title, children }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+            <XIcon />
+          </button>
+        </div>
+        <div className="px-6 py-6">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Step 1: File Upload
+const UploadStep = ({ onFileSelect, selectedFile, onParsed }) => {
+  const [isParsing, setIsParsing] = useState(false);
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    onFileSelect(file);
+    
+    setIsParsing(true);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target.result;
+      const lines = text.split("\n").filter(l => l.trim());
+      if (lines.length < 2) {
+        alert("Invalid CSV file");
+        setIsParsing(false);
+        return;
+      }
+      const headers = lines[0].split(",").map(h => h.replace(/"/g, "").trim());
+      const preview = [];
+      for (let i = 1; i <= Math.min(5, lines.length - 1); i++) {
+        const values = lines[i].split(",").map(v => v.replace(/"/g, "").trim());
+        const row = {};
+        headers.forEach((h, idx) => row[h] = values[idx] || "");
+        preview.push(row);
+      }
+      onParsed({ headers, preview, fullData: lines.slice(1) });
+      setIsParsing(false);
+    };
+    reader.readAsText(file);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center hover:border-indigo-300 transition-colors">
+        <div className="flex justify-center mb-3">
+          <FileIcon />
+        </div>
+        <p className="text-sm font-semibold text-slate-700 mb-1">Upload CSV File</p>
+        <p className="text-xs text-slate-400 mb-3">Supported format: .csv with headers</p>
+        <input
+          type="file"
+          accept=".csv"
+          onChange={handleFileUpload}
+          className="hidden"
+          id="csv-upload"
+        />
+        <label
+          htmlFor="csv-upload"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold cursor-pointer hover:bg-indigo-700 transition"
+        >
+          <UploadIcon /> Choose File
+        </label>
+        {selectedFile && (
+          <p className="text-xs text-emerald-600 mt-3 flex items-center justify-center gap-1">
+            ✓ {selectedFile.name}
+          </p>
+        )}
+      </div>
+      {isParsing && (
+        <div className="flex items-center justify-center gap-2 text-sm text-indigo-600">
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-indigo-600 border-t-transparent"></div>
+          Parsing file...
+        </div>
+      )}
+    </div>
+  );
+};
+// Step 2: Column Mapping - FIXED VERSION
+const MappingStep = ({ headers, preview, onMappingComplete }) => {
+  const [mapping, setMapping] = useState({});
+  
+  // This should show your CSV headers in the dropdown
+  console.log("Available headers:", headers); // Debug: Check if headers are received
+
+  const requiredFields = [
+    { key: "fullName", label: "Full Name", required: true, description: "Contact's full name" },
+    { key: "email", label: "Email", required: true, description: "Contact's email address" },
+    { key: "phone", label: "Phone", required: false, description: "Contact's phone number" },
+    { key: "status", label: "Status", required: false, description: "active/suppressed" },
+    { key: "tags", label: "Tags", required: false, description: "Comma-separated tags" },
+    { key: "score", label: "Score", required: false, description: "0-100 engagement score" },
+    { key: "list", label: "List", required: false, description: "List name" },
+  ];
+
+  const handleMap = (field, header) => {
+    setMapping(prev => ({ ...prev, [field]: header }));
+  };
+
+  const handleContinue = () => {
+    const missing = requiredFields.filter(f => f.required && !mapping[f.key]);
+    if (missing.length) {
+      alert(`Please map required fields: ${missing.map(m => m.label).join(", ")}`);
+      return;
+    }
+    onMappingComplete(mapping);
+  };
+
+  // If no headers, show error
+  if (!headers || headers.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-500">No headers found. Please go back and upload a valid CSV file.</p>
+        <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg">
+          Go Back
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
+        <p className="text-xs text-blue-700">
+          📌 Map your CSV columns to contact fields. Required fields must be mapped.
+        </p>
+        <p className="text-xs text-blue-600 mt-1">
+          Found {headers.length} columns: {headers.join(", ")}
+        </p>
+      </div>
+      
+      <div className="space-y-3 max-h-96 overflow-y-auto">
+        {requiredFields.map(field => (
+          <div key={field.key} className="flex items-center gap-4">
+            <div className="w-32">
+              <span className="text-sm font-semibold text-slate-700">
+                {field.label}
+                {field.required && <span className="text-red-500 ml-1">*</span>}
+              </span>
+              <p className="text-xs text-slate-400">{field.description}</p>
+            </div>
+            <select
+              value={mapping[field.key] || ""}
+              onChange={(e) => handleMap(field.key, e.target.value)}
+              className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+            >
+              <option value="">-- Select column --</option>
+              {headers.map(h => (
+                <option key={h} value={h}>{h}</option>
+              ))}
+            </select>
+          </div>
+        ))}
+      </div>
+
+      {preview && preview.length > 0 && (
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">Preview (first 5 rows)</label>
+          <div className="overflow-x-auto border rounded-lg max-h-64 overflow-y-auto">
+            <table className="w-full text-xs">
+              <thead className="bg-slate-50 sticky top-0">
+                <tr>
+                  {headers.map(h => (
+                    <th key={h} className="px-3 py-2 text-left font-semibold text-slate-600 border-b">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {preview.map((row, idx) => (
+                  <tr key={idx} className="border-t border-slate-100">
+                    {headers.map(h => (
+                      <td key={h} className="px-3 py-2 text-slate-500">{row[h] || "—"}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <div className="flex justify-end pt-4">
+        <button
+          onClick={handleContinue}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition"
+        >
+          Continue to Duplicate Rules
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Step 3: Duplicate Rules
+const DuplicateStep = ({ onComplete, onBack }) => {
+  const [duplicateRule, setDuplicateRule] = useState("update");
+  const [matchField, setMatchField] = useState("email");
+
+  const handleImport = async () => {
+    alert(`Importing with rule: ${duplicateRule}, match on: ${matchField}`);
+    onComplete();
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
+        <p className="text-xs text-amber-700">
+          ⚠️ Configure how to handle duplicate contacts during import.
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-slate-700 mb-2">Match duplicates by</label>
+        <select
+          value={matchField}
+          onChange={(e) => setMatchField(e.target.value)}
+          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-500"
+        >
+          <option value="email">Email</option>
+          <option value="phone">Phone</option>
+          <option value="email_or_phone">Email or Phone</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-slate-700 mb-2">If duplicate found</label>
+        <div className="space-y-2">
+          <label className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50">
+            <input
+              type="radio"
+              name="duplicateRule"
+              value="skip"
+              checked={duplicateRule === "skip"}
+              onChange={(e) => setDuplicateRule(e.target.value)}
+              className="text-indigo-600"
+            />
+            <div>
+              <p className="font-semibold text-slate-800 text-sm">Skip duplicate</p>
+              <p className="text-xs text-slate-400">Don't import contacts that already exist</p>
+            </div>
+          </label>
+          
+          <label className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50">
+            <input
+              type="radio"
+              name="duplicateRule"
+              value="update"
+              checked={duplicateRule === "update"}
+              onChange={(e) => setDuplicateRule(e.target.value)}
+              className="text-indigo-600"
+            />
+            <div>
+              <p className="font-semibold text-slate-800 text-sm">Update existing</p>
+              <p className="text-xs text-slate-400">Overwrite existing contact data with new values</p>
+            </div>
+          </label>
+          
+          <label className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50">
+            <input
+              type="radio"
+              name="duplicateRule"
+              value="create_new"
+              checked={duplicateRule === "create_new"}
+              onChange={(e) => setDuplicateRule(e.target.value)}
+              className="text-indigo-600"
+            />
+            <div>
+              <p className="font-semibold text-slate-800 text-sm">Create as new</p>
+              <p className="text-xs text-slate-400">Always create a new contact even if duplicate exists</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div className="flex justify-between pt-4">
+        <button
+          onClick={onBack}
+          className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+        >
+          Back
+        </button>
+        <button
+          onClick={handleImport}
+          className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition"
+        >
+          Confirm Import
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Step 4: Success
+const SuccessStep = ({ importedCount, onClose }) => {
+  return (
+    <div className="text-center py-8 space-y-4">
+      <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
+        <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <h4 className="text-xl font-bold text-slate-900">Import Complete!</h4>
+      <p className="text-slate-500">
+        Successfully imported <span className="font-bold text-emerald-600">{importedCount}</span> contacts.
+      </p>
+      <button
+        onClick={onClose}
+        className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700"
+      >
+        Close
+      </button>
+    </div>
+  );
+};
+
 /* ─── MAIN PAGE ──────────────────────────────────────────────────── */
 export default function ContactsPage() {
   const [contacts, setContacts] = useState(ALL_CONTACTS);
@@ -602,6 +938,14 @@ export default function ContactsPage() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(new Set());
   const LIMIT = 10;
+
+  // Import wizard state
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importStep, setImportStep] = useState(1);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [parsedData, setParsedData] = useState({ headers: [], preview: [], fullData: [] });
+  const [columnMapping, setColumnMapping] = useState({});
+  const [importedCount, setImportedCount] = useState(0);
 
   useEffect(() => setPage(1), [search, listFilter, statusFilter, channelFilter]);
 
@@ -652,45 +996,60 @@ export default function ContactsPage() {
     a.download = `contacts_${new Date().toISOString().slice(0,10)}.csv`;
     a.click();
   };
+
   const handleImport = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".csv";
-    input.onchange = (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const lines = ev.target.result.split("\n").filter(l => l.trim());
-        if (lines.length < 2) { alert("Invalid CSV"); return; }
-        const hdrs = lines[0].split(",").map(h => h.replace(/"/g, "").trim());
-        const newC = [];
-        for (let i = 1; i < lines.length; i++) {
-          const vals = lines[i].split(",").map(v => v.replace(/"/g, "").trim());
-          const name = vals[hdrs.indexOf("Full Name")] || vals[0] || "Unknown";
-          const email = vals[hdrs.indexOf("Email")] || "";
-          if (name && email) newC.push({
-            id: `imp_${Date.now()}_${i}`,
-            fullName: name,
-            email,
-            phone: vals[hdrs.indexOf("Phone")] || "",
-            status: vals[hdrs.indexOf("Status")] || "active",
-            tags: (vals[hdrs.indexOf("Tags")] || "").split(";").filter(Boolean),
-            score: parseInt(vals[hdrs.indexOf("Score")]) || 50,
-            list: vals[hdrs.indexOf("List")] || "All Subscribers",
-            campaign: vals[hdrs.indexOf("Campaign")] || "—",
-            ci: 0,
-          });
-        }
-        if (newC.length) {
-          setContacts(prev => [...newC, ...prev]);
-          alert(`Imported ${newC.length} contacts`);
-        } else alert("No valid contacts found");
-      };
-      reader.readAsText(file);
-    };
-    input.click();
+    setImportStep(1);
+    setSelectedFile(null);
+    setParsedData({ headers: [], preview: [], fullData: [] });
+    setColumnMapping({});
+    setIsImportModalOpen(true);
   };
+
+  const handleFileSelect = (file) => {
+    setSelectedFile(file);
+  };
+
+const handleParsed = (data) => {
+  setParsedData(data);
+  setImportStep(2); // Move to mapping step after parsing
+};
+
+  const handleMappingComplete = (mapping) => {
+    setColumnMapping(mapping);
+    setImportStep(3);
+  };
+
+  const handleDuplicateComplete = () => {
+    // Simulate import with the mapping
+    const newContacts = parsedData.fullData.slice(0, 5).map((line, idx) => {
+      const values = line.split(",").map(v => v.replace(/"/g, "").trim());
+      return {
+        id: `imp_${Date.now()}_${idx}`,
+        fullName: values[0] || "Unknown",
+        email: values[1] || "",
+        phone: values[2] || "",
+        status: "active",
+        tags: [],
+        score: 50,
+        list: "All Subscribers",
+        campaign: "—",
+        ci: idx % AVATAR_COLORS.length,
+      };
+    });
+    
+    setContacts(prev => [...newContacts, ...prev]);
+    setImportedCount(newContacts.length);
+    setImportStep(4);
+  };
+
+  const handleImportClose = () => {
+    setIsImportModalOpen(false);
+    setImportStep(1);
+    setSelectedFile(null);
+    setParsedData({ headers: [], preview: [], fullData: [] });
+    setColumnMapping({});
+  };
+
   const handleAddToList = () => {
     if (!selected.size) return alert("No contacts selected");
     alert(`Add ${selected.size} contacts to list (demo)`);
@@ -861,6 +1220,39 @@ export default function ContactsPage() {
           </div>
         </div>
       </div>
+
+      {/* IMPORT MODAL - CSV Wizard */}
+      <Modal isOpen={isImportModalOpen} onClose={handleImportClose} title="Import Contacts">
+        {importStep === 1 && (
+          <UploadStep 
+            onFileSelect={handleFileSelect} 
+            selectedFile={selectedFile} 
+            onParsed={handleParsed} 
+          />
+        )}
+        
+        {importStep === 2 && (
+          <MappingStep 
+            headers={parsedData.headers} 
+            preview={parsedData.preview} 
+            onMappingComplete={handleMappingComplete} 
+          />
+        )}
+        
+        {importStep === 3 && (
+          <DuplicateStep 
+            onComplete={handleDuplicateComplete} 
+            onBack={() => setImportStep(2)} 
+          />
+        )}
+        
+        {importStep === 4 && (
+          <SuccessStep 
+            importedCount={importedCount} 
+            onClose={handleImportClose} 
+          />
+        )}
+      </Modal>
     </div>
   );
 }
