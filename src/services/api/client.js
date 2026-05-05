@@ -16,6 +16,18 @@ apiClient.interceptors.request.use((config) => {
 
 // ── Response: handle 401, normalise errors ─────────────────────────────────────
 let isRefreshing = false
+let failedQueue = []
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error)
+    } else {
+      prom.resolve(token)
+    }
+  })
+  failedQueue = []
+}
 
 apiClient.interceptors.response.use(
   (res) => res,
@@ -25,12 +37,23 @@ apiClient.interceptors.response.use(
       originalRequest._retry = false
     }
 
-    if (error.response?.status === 401 && !originalRequest?._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      // if (isRefreshing) {
+      //   useAuthStore.getState().clearAuth()
+      //   window.location.href = '/login'
+      //   return Promise.reject(error)
+      // }
       if (isRefreshing) {
-        useAuthStore.getState().clearAuth()
-        window.location.href = '/login'
-        return Promise.reject(error)
-      }
+  return new Promise((resolve, reject) => {
+    failedQueue.push({
+      resolve: (token) => {
+        originalRequest.headers.Authorization = `Bearer ${token}`
+        resolve(apiClient(originalRequest))
+      },
+      reject: (err) => reject(err),
+    })
+  })
+}
       isRefreshing = true
       originalRequest._retry = true
 
@@ -40,14 +63,22 @@ apiClient.interceptors.response.use(
         const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL ?? '/api'}/auth/refresh`, {
           refreshToken,
         })
-        useAuthStore.getState().setAccessToken(res.data.accessToken)
-        originalRequest.headers.Authorization = `Bearer ${res.data.accessToken}`
+        // useAuthStore.getState().setAccessToken(res.data.accessToken)
+        // originalRequest.headers.Authorization = `Bearer ${res.data.accessToken}`
+        const newToken = res.data.accessToken
+useAuthStore.getState().setAccessToken(newToken)
+
+processQueue(null, newToken)   // ✅ ADD THIS
+
+originalRequest.headers.Authorization = `Bearer ${newToken}`
         return apiClient(originalRequest)
-      } catch {
-        useAuthStore.getState().clearAuth()
-        window.location.href = '/login'
-        return Promise.reject(error)
-      } finally {
+      } catch (err) {
+  processQueue(err, null)   // ✅ ADD THIS
+
+  useAuthStore.getState().clearAuth()
+  window.location.href = '/login'
+  return Promise.reject(err)
+} finally {
         isRefreshing = false
       }
     }

@@ -125,6 +125,10 @@ export default function LoginPage() {
   });
   const [authError, setAuthError] = useState(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+const [forgotEmail, setForgotEmail] = useState('');
+const [forgotMessage, setForgotMessage] = useState(null);
+const [isSending, setIsSending] = useState(false);
 
   const {
     register,
@@ -157,11 +161,31 @@ export default function LoginPage() {
     );
   }
 
+  // const handleDevLogin = () => {
+  //   setAuthStorage(MOCK_USER, MOCK_WORKSPACE, 'dev-token', 'dev-refresh');
+  //   setIsAuthenticated(true);
+  //   setAuthError(null);
+  // };
   const handleDevLogin = () => {
-    setAuthStorage(MOCK_USER, MOCK_WORKSPACE, 'dev-token', 'dev-refresh');
-    setIsAuthenticated(true);
-    setAuthError(null);
-  };
+  if (!import.meta.env.DEV) return;
+
+  setAuthStorage(MOCK_USER, MOCK_WORKSPACE, 'dev-token', 'dev-refresh');
+  setIsAuthenticated(true);
+  setAuthError(null);
+};
+const handleForgotPassword = () => {
+  setIsSending(true);
+  setForgotMessage(null);
+
+  setTimeout(() => {
+    if (forgotEmail) {
+      setForgotMessage('Reset link sent to your email');
+    } else {
+      setForgotMessage('Please enter a valid email');
+    }
+    setIsSending(false);
+  }, 800);
+};
 
   const handleRealLogin = (data) => {
     setIsLoggingIn(true);
@@ -193,7 +217,7 @@ export default function LoginPage() {
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-card p-8">
           {/* DEV BYPASS */}
-          <div className="mb-5">
+          {/* <div className="mb-5">
             <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 mb-3 text-left">
               <p className="text-xs font-bold text-amber-700 mb-0.5">🔧 Development Mode</p>
               <p className="text-xs text-amber-600">No backend needed. Click below to enter with a mock Owner account.</p>
@@ -205,43 +229,104 @@ export default function LoginPage() {
             >
               <Zap className="h-4 w-4" />
               Enter App — Dev Login (No Password)
-            </button>
-            <div className="flex items-center gap-2 my-4">
+            </button> */}
+            {import.meta.env.DEV && (
+  <div className="mb-5">
+    <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 mb-3 text-left">
+      <p className="text-xs font-bold text-amber-700 mb-0.5">🔧 Development Mode</p>
+      <p className="text-xs text-amber-600">No backend needed. Click below to enter with a mock Owner account.</p>
+    </div>
+    <button
+      type="button"
+      onClick={handleDevLogin}
+      className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 py-3 text-sm font-bold text-white hover:opacity-90 transition-opacity"
+    >
+      <Zap className="h-4 w-4" />
+      Enter App — Dev Login (No Password)
+    </button>
+
+    <div className="flex items-center gap-2 my-4">
+      <div className="flex-1 h-px bg-slate-200" />
+      <span className="text-xs text-slate-400">or use real credentials</span>
+      <div className="flex-1 h-px bg-slate-200" />
+    </div>
+  </div>
+)}
+            {/* <div className="flex items-center gap-2 my-4">
               <div className="flex-1 h-px bg-slate-200" />
               <span className="text-xs text-slate-400">or use real credentials</span>
               <div className="flex-1 h-px bg-slate-200" />
-            </div>
-          </div>
+            </div> */}
+          
 
           {authError && <Alert variant="error" className="mb-5">{authError}</Alert>}
 
-          <form onSubmit={handleSubmit(handleRealLogin)} className="space-y-4">
-            <Input
-              label="Email"
-              type="email"
-              placeholder="you@company.com"
-              leftAddon={<Mail className="h-3.5 w-3.5" />}
-              error={errors.email?.message}
-              autoComplete="email"
-              {...register('email')}
-            />
-            <Input
-              label="Password"
-              type="password"
-              placeholder="••••••••"
-              leftAddon={<Lock className="h-3.5 w-3.5" />}
-              error={errors.password?.message}
-              autoComplete="current-password"
-              {...register('password')}
-            />
-            <Button type="submit" variant="primary" fullWidth loading={isLoggingIn} size="lg">
-              Sign in
-            </Button>
-          </form>
+         {!showForgot ? (
+  <form onSubmit={handleSubmit(handleRealLogin)} className="space-y-4">
+    <Input
+      label="Email"
+      type="email"
+      placeholder="you@company.com"
+      leftAddon={<Mail className="h-3.5 w-3.5" />}
+      error={errors.email?.message}
+      autoComplete="email"
+      {...register('email')}
+    />
+
+    <Input
+      label="Password"
+      type="password"
+      placeholder="••••••••"
+      leftAddon={<Lock className="h-3.5 w-3.5" />}
+      error={errors.password?.message}
+      autoComplete="current-password"
+      {...register('password')}
+    />
+
+    <div className="text-right">
+      <button
+        type="button"
+        onClick={() => setShowForgot(true)}
+        className="text-xs text-indigo-600 hover:underline"
+      >
+        Forgot password?
+      </button>
+    </div>
+
+    <Button type="submit" fullWidth loading={isLoggingIn} size="lg">
+      Sign in
+    </Button>
+  </form>
+) : (
+  <div className="space-y-4">
+    <Input
+      label="Enter your email"
+      type="email"
+      placeholder="you@company.com"
+      value={forgotEmail}
+      onChange={(e) => setForgotEmail(e.target.value)}
+    />
+
+    {forgotMessage && (
+      <Alert variant="warning">{forgotMessage}</Alert>
+    )}
+
+    <Button onClick={handleForgotPassword} fullWidth loading={isSending}>
+      Send Reset Link
+    </Button>
+
+    <button
+      onClick={() => setShowForgot(false)}
+      className="text-xs text-slate-500 hover:underline w-full text-center"
+    >
+      Back to login
+    </button>
+  </div>
+)}
         </div>
 
         <p className="text-center text-xs text-slate-400 mt-6">© 2026 WYNSync · Privacy · Terms</p>
       </div>
-    </div>
+   </div>
   );
 }
