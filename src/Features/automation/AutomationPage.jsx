@@ -425,16 +425,15 @@ const Toggle = ({ checked, onChange, disabled }) => (
   </button>
 );
 
-// Slide-over Panel Component
-const SlideOver = ({ isOpen, onClose, title, children }) => {
+// Modal Component (Popup)
+const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
   return (
-    <>
-      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-white shadow-xl transform transition-transform duration-300 ease-in-out overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <h3 className="text-lg font-bold text-slate-900">{title}</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -442,7 +441,7 @@ const SlideOver = ({ isOpen, onClose, title, children }) => {
           {children}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
@@ -478,7 +477,7 @@ const TriggerConfig = ({ trigger, onUpdate }) => {
             value={trigger.config.listName || ''}
             onChange={(e) => onUpdate({ ...trigger, config: { listName: e.target.value } })}
             placeholder="e.g., All Subscribers, Newsletter List"
-            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm"
+            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
           />
         </div>
       )}
@@ -491,7 +490,7 @@ const TriggerConfig = ({ trigger, onUpdate }) => {
             value={trigger.config.tag || ''}
             onChange={(e) => onUpdate({ ...trigger, config: { tag: e.target.value } })}
             placeholder="e.g., VIP Customer, Inactive-90d"
-            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm"
+            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
           />
         </div>
       )}
@@ -504,7 +503,7 @@ const TriggerConfig = ({ trigger, onUpdate }) => {
             value={trigger.config.link || ''}
             onChange={(e) => onUpdate({ ...trigger, config: { link: e.target.value } })}
             placeholder="e.g., Book a Demo, Buy Now"
-            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm"
+            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
           />
         </div>
       )}
@@ -696,7 +695,7 @@ const WorkflowCard = ({ workflow, onToggle }) => {
 export default function AutomationPage() {
   const [workflows, setWorkflows] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
   
@@ -746,7 +745,7 @@ export default function AutomationPage() {
 
     setWorkflows(prev => [newWorkflow, ...prev]);
     setIsCreating(false);
-    setIsSlideOverOpen(false);
+    setIsModalOpen(false);
     setWorkflowData({
       name: '',
       trigger: { type: 'contact_added_to_list', config: {} },
@@ -765,35 +764,18 @@ export default function AutomationPage() {
       action: { type: 'send_email_campaign', config: {} },
     });
     setCurrentStep(1);
-    setIsSlideOverOpen(true);
+    setIsModalOpen(true);
   };
 
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <TriggerConfig
-            trigger={workflowData.trigger}
-            onUpdate={(trigger) => setWorkflowData({ ...workflowData, trigger })}
-          />
-        );
-      case 2:
-        return (
-          <ConditionConfig
-            condition={workflowData.condition}
-            onUpdate={(condition) => setWorkflowData({ ...workflowData, condition })}
-          />
-        );
-      case 3:
-        return (
-          <ActionConfig
-            action={workflowData.action}
-            onUpdate={(action) => setWorkflowData({ ...workflowData, action })}
-          />
-        );
-      default:
-        return null;
-    }
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setCurrentStep(1);
+    setWorkflowData({
+      name: '',
+      trigger: { type: 'contact_added_to_list', config: {} },
+      condition: { type: 'always', config: {} },
+      action: { type: 'send_email_campaign', config: {} },
+    });
   };
 
   if (isLoading) {
@@ -838,8 +820,8 @@ export default function AutomationPage() {
         </div>
       </div>
 
-      {/* Create Workflow Slide-over Panel */}
-      <SlideOver isOpen={isSlideOverOpen} onClose={() => setIsSlideOverOpen(false)} title="Create New Workflow">
+      {/* Create Workflow Modal (Popup) */}
+      <Modal isOpen={isModalOpen} onClose={closeModal} title="Create New Workflow">
         <div className="space-y-6">
           {/* Workflow Name */}
           <div>
@@ -854,6 +836,32 @@ export default function AutomationPage() {
               className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
             />
           </div>
+
+          {/* Step Indicator */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${currentStep >= 1 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                1
+              </div>
+              <span className={`text-sm ${currentStep >= 1 ? 'text-indigo-600' : 'text-slate-400'}`}>Trigger</span>
+            </div>
+            <ChevronRight className="h-4 w-4 text-slate-300" />
+            <div className="flex items-center gap-2">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${currentStep >= 2 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                2
+              </div>
+              <span className={`text-sm ${currentStep >= 2 ? 'text-indigo-600' : 'text-slate-400'}`}>Condition</span>
+            </div>
+            <ChevronRight className="h-4 w-4 text-slate-300" />
+            <div className="flex items-center gap-2">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${currentStep >= 3 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                3
+              </div>
+              <span className={`text-sm ${currentStep >= 3 ? 'text-indigo-600' : 'text-slate-400'}`}>Action</span>
+            </div>
+          </div>
+
+          <div className="h-px bg-slate-100 my-4"></div>
 
           {/* Step 1: Trigger */}
           {currentStep === 1 && (
@@ -880,7 +888,7 @@ export default function AutomationPage() {
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between pt-6 border-t border-slate-100">
+          <div className="flex justify-between pt-4 border-t border-slate-100">
             <div>
               {currentStep > 1 && (
                 <Button variant="secondary" onClick={() => setCurrentStep(currentStep - 1)}>
@@ -901,7 +909,7 @@ export default function AutomationPage() {
             </div>
           </div>
         </div>
-      </SlideOver>
+      </Modal>
     </div>
   );
 }
