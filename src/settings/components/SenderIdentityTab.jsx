@@ -188,8 +188,7 @@
 // }
 
 
-// SenderIdentityTab.jsx – With working add domain & link number modals
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 const cn = (...classes) => classes.filter(Boolean).join(' ');
 
@@ -203,6 +202,12 @@ const PlusIcon = () => (
 const XIcon = () => (
   <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+
+const CopyIcon = () => (
+  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
   </svg>
 );
 
@@ -225,8 +230,14 @@ const ThreeDotsIcon = () => (
   </svg>
 );
 
+const MetaIcon = () => (
+  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" color="#1877F2">
+    <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879-.146-.69-.242-1.505-.242-2.131 0-1.318.416-2.77.743-3.932l.553-2.07c-.14-.353-.319-1.044-.319-1.674 0-.988.553-1.736 1.256-1.736.592 0 .88.446.88 1.008 0 .614-.39 1.557-.592 2.438-.168.682.343 1.242 1.017 1.242 1.22 0 2.068-1.576 2.068-3.446 0-1.573-1.056-2.747-2.972-2.747-2.167 0-3.52 1.62-3.52 3.432 0 .616.182 1.05.467 1.386.131.154.149.216.101.396l-.18.696c-.054.205-.223.278-.405.19-1.135-.477-1.658-1.753-1.658-3.19 0-2.37 1.999-5.228 6.032-5.228 3.225 0 5.348 2.336 5.348 4.843 0 3.324-1.849 5.802-4.575 5.802-.915 0-1.774-.494-2.069-1.056l-.564 2.224c-.489 1.79-1.454 3.227-2.43 4.241C17.143 20.538 21 16.735 21 12c0-5.523-4.477-10-10-10z"/>
+  </svg>
+);
+
 // UI Components
-const Button = ({ children, variant, onClick, className, disabled }) => {
+const Button = ({ children, variant, onClick, className, disabled, loading }) => {
   const variants = {
     primary: "bg-[#4F46E5] text-white hover:bg-[#4338CA]",
     secondary: "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
@@ -234,9 +245,10 @@ const Button = ({ children, variant, onClick, className, disabled }) => {
   return (
     <button 
       onClick={onClick} 
-      disabled={disabled}
+      disabled={disabled || loading}
       className={cn("px-4 py-1.5 rounded-lg text-sm font-semibold font-['Plus_Jakarta_Sans'] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed", variants[variant], className)}
     >
+      {loading && <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" />}
       {children}
     </button>
   );
@@ -256,23 +268,120 @@ const StatusBadge = ({ label, status }) => {
 };
 
 // Modal Component
-const Modal = ({ isOpen, onClose, title, children }) => {
+const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
   if (!isOpen) return null;
+  const sizes = {
+    sm: 'max-w-md',
+    md: 'max-w-2xl',
+    lg: 'max-w-4xl'
+  };
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
-        <div className="flex justify-between items-center px-6 py-4 border-b">
-        <h3 className="text-lg font-bold text-slate-900 font-['Plus_Jakarta_Sans']">
-  {title}
-</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+      <div className={cn("bg-white rounded-2xl w-full shadow-xl max-h-[90vh] overflow-y-auto", sizes[size])} onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 bg-white z-10 flex justify-between items-center px-6 py-4 border-b">
+          <h3 className="text-lg font-bold text-slate-900 font-['Plus_Jakarta_Sans']">{title}</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
             <XIcon />
           </button>
         </div>
-        <div className="px-6 py-4">{children}</div>
+        <div className="px-6 py-6">{children}</div>
       </div>
     </div>
   );
+};
+
+// DNS Instructions Component
+const DNSInstructions = ({ domain, onClose }) => {
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text);
+    alert('Copied to clipboard!');
+  };
+
+  const dnsRecords = [
+    {
+      type: 'TXT',
+      name: domain,
+      value: `v=spf1 include:spf.wynsync.com ~all`,
+      description: 'SPF record authenticates your email sending servers'
+    },
+    {
+      type: 'TXT',
+      name: `default._domainkey.${domain}`,
+      value: `v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC...`,
+      description: 'DKIM record digitally signs your emails'
+    }
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+        <div className="flex items-start gap-3">
+          <div className="text-blue-600 text-xl">📋</div>
+          <div>
+            <h4 className="font-semibold text-slate-900 text-sm mb-1">DNS Records to Add</h4>
+            <p className="text-xs text-slate-600">
+              To verify your domain, add the following DNS records to your domain provider. 
+              Verification may take up to 48 hours to propagate.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {dnsRecords.map((record, idx) => (
+          <div key={idx} className="border border-slate-200 rounded-xl overflow-hidden">
+            <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono font-bold text-slate-600">{record.type}</span>
+                  <span className="text-xs text-slate-500">Record</span>
+                </div>
+                <button 
+                  onClick={() => handleCopy(record.value)}
+                  className="text-slate-400 hover:text-slate-600 text-xs flex items-center gap-1"
+                >
+                  <CopyIcon /> Copy
+                </button>
+              </div>
+            </div>
+            <div className="p-4 space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-slate-500 mb-1 block">Name/Host</label>
+                <code className="text-sm font-mono bg-slate-100 p-2 rounded block break-all">{record.name}</code>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-500 mb-1 block">Value/Data</label>
+                <code className="text-sm font-mono bg-slate-100 p-2 rounded block break-all whitespace-pre-wrap">{record.value}</code>
+              </div>
+              <p className="text-xs text-slate-500 mt-2">{record.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
+        <p className="text-xs text-amber-700">
+          ⚠️ After adding these records, click "Verify Domain" to check if they're correctly configured.
+        </p>
+      </div>
+
+      <div className="flex justify-end gap-3 pt-4">
+        <Button variant="secondary" onClick={onClose}>
+          Close
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+// Simulated API call
+const createDomain = async (domain, senderName, emailAddress) => {
+  console.log(`[API] Creating domain: ${domain}, Sender: ${senderName}, Email: ${emailAddress}`);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  return {
+    success: true,
+    domain: { domain, senderName, emailAddress, dkimStatus: 'pending', spfStatus: 'pending' }
+  };
 };
 
 export default function SenderIdentityTab() {
@@ -303,38 +412,59 @@ export default function SenderIdentityTab() {
 
   // Modal states
   const [showAddDomain, setShowAddDomain] = useState(false);
+  const [showDNSInstructions, setShowDNSInstructions] = useState(false);
   const [showLinkNumber, setShowLinkNumber] = useState(false);
-  const [domainForm, setDomainForm] = useState({ domain: '', fromEmail: '', replyTo: '' });
+  const [domainForm, setDomainForm] = useState({ domain: '', senderName: '', emailAddress: '' });
   const [domainFormError, setDomainFormError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newlyAddedDomain, setNewlyAddedDomain] = useState(null);
   const [waForm, setWaForm] = useState({ phoneNumber: '', accountName: '' });
   const [waFormError, setWaFormError] = useState('');
 
-  // Handle Add Domain
-  const handleAddDomainSubmit = () => {
+  // Handle Add Domain with API call
+  const handleAddDomainSubmit = async () => {
     if (!domainForm.domain.trim()) {
       setDomainFormError('Domain name is required');
       return;
     }
-    if (!domainForm.fromEmail.trim() || !domainForm.fromEmail.includes('@')) {
-      setDomainFormError('Valid From email is required');
+    if (!domainForm.senderName.trim()) {
+      setDomainFormError('Sender name is required');
+      return;
+    }
+    if (!domainForm.emailAddress.trim() || !domainForm.emailAddress.includes('@')) {
+      setDomainFormError('Valid email address is required');
       return;
     }
     
     setDomainFormError('');
-    const newDomain = {
-      id: `domain_${Date.now()}`,
-      domain: domainForm.domain,
-      dkimStatus: 'pending',
-      spfStatus: 'pending',
-      fromEmail: domainForm.fromEmail,
-      replyTo: domainForm.replyTo || null,
-      isDefault: false
-    };
+    setIsSubmitting(true);
     
-    setEmailDomains(prev => [...prev, newDomain]);
-    setShowAddDomain(false);
-    setDomainForm({ domain: '', fromEmail: '', replyTo: '' });
-    alert(`Domain "${domainForm.domain}" added successfully! Please verify DNS records.`);
+    try {
+      const result = await createDomain(domainForm.domain, domainForm.senderName, domainForm.emailAddress);
+      
+      if (result.success) {
+        const newDomain = {
+          id: `domain_${Date.now()}`,
+          domain: domainForm.domain,
+          dkimStatus: 'pending',
+          spfStatus: 'pending',
+          fromEmail: domainForm.emailAddress,
+          replyTo: null,
+          senderName: domainForm.senderName,
+          isDefault: false
+        };
+        
+        setEmailDomains(prev => [...prev, newDomain]);
+        setNewlyAddedDomain(newDomain);
+        setShowAddDomain(false);
+        setShowDNSInstructions(true);
+        setDomainForm({ domain: '', senderName: '', emailAddress: '' });
+      }
+    } catch (error) {
+      setDomainFormError('Failed to add domain. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Handle Link WhatsApp Number
@@ -366,7 +496,6 @@ export default function SenderIdentityTab() {
   // Handle Verify Domain
   const handleVerifyDomain = (domainId, domainName) => {
     alert(`Verification initiated for ${domainName}. Please check your DNS records for DKIM/SPF settings.`);
-    // In a real app, you would update the status after verification
     setEmailDomains(prev => prev.map(domain => 
       domain.id === domainId 
         ? { ...domain, dkimStatus: 'verified', spfStatus: 'verified' }
@@ -403,12 +532,12 @@ export default function SenderIdentityTab() {
     <>
       <div className="space-y-4">
         {/* Email Sending Domains Section */}
-        <div className="bg-white rounded-3xl border border-slate-100 px-4 py-4 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
+        <div className="bg-white rounded-3xl border border-slate-100 px-6 py-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
             <div>
-             <h3 className="text-[14px] font-bold text-slate-900 font-['Plus_Jakarta_Sans']">
-  Email Sending Domains
-</h3>
+              <h3 className="text-[16px] font-bold text-slate-900 font-['Plus_Jakarta_Sans']">
+                Email Sending Domains
+              </h3>
             </div>
             <Button variant="primary" onClick={() => setShowAddDomain(true)}>
               <PlusIcon /> Add Domain
@@ -472,18 +601,18 @@ export default function SenderIdentityTab() {
         </div>
 
         {/* WhatsApp Business Section */}
-        <div className="bg-white rounded-3xl border border-slate-100 px-4 py-4 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white rounded-3xl border border-slate-100 px-6 py-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-[16px] font-bold text-slate-900 font-['Plus_Jakarta_Sans']">WhatsApp Business</h3>
             </div>
             <Button
-  variant="secondary"
-  className="text-slate-500 font-medium border-slate-100 font-['Plus_Jakarta_Sans']"
-  onClick={() => setShowLinkNumber(true)}
->
-  Link Number
-</Button>
+              variant="secondary"
+              className="text-slate-500 font-medium border-slate-100 font-['Plus_Jakarta_Sans']"
+              onClick={() => setShowLinkNumber(true)}
+            >
+              Link Number
+            </Button>
           </div>
 
           <div className="space-y-4">
@@ -495,8 +624,8 @@ export default function SenderIdentityTab() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-slate-800 text-[15px] tracking-tight font-['Plus_Jakarta_Sans']">
-  {wa.phoneNumber}
-</h4>
+                      {wa.phoneNumber}
+                    </h4>
                     <p className="text-[13px] text-slate-400 mt-0.5">
                       {wa.accountName} · {wa.templates} approved templates
                     </p>
@@ -527,72 +656,95 @@ export default function SenderIdentityTab() {
         </div>
       </div>
 
-      {/* Modal: Add Domain */}
-      <Modal isOpen={showAddDomain} onClose={() => setShowAddDomain(false)} title="Add Email Sending Domain">
-        <div className="space-y-2">
+      {/* Modal: Add Domain - Step 1: Form */}
+      <Modal isOpen={showAddDomain} onClose={() => setShowAddDomain(false)} title="Add Email Sending Domain" size="md">
+        <div className="space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-0 font-['Plus_Jakarta_Sans']">
-  Domain
-</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-['Plus_Jakarta_Sans']">
+              Domain Name
+            </label>
             <input
               type="text"
               value={domainForm.domain}
               onChange={(e) => setDomainForm(prev => ({ ...prev, domain: e.target.value }))}
               placeholder="example.com"
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-            />
-          </div>
-          <div>
-           <label className="block text-sm font-semibold text-slate-700 mb-1 font-['Plus_Jakarta_Sans']">
-  From Email
-</label>
-            <input
-              type="email"
-              value={domainForm.fromEmail}
-              onChange={(e) => setDomainForm(prev => ({ ...prev, fromEmail: e.target.value }))}
-              placeholder="team@example.com"
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
             />
+            <p className="text-xs text-slate-400 mt-1">Enter your domain name (e.g., yourcompany.com)</p>
           </div>
+          
           <div>
-           <label className="block text-sm font-semibold text-slate-700 mb-1 font-['Plus_Jakarta_Sans']">
-  Reply-to Email (optional)
-</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-['Plus_Jakarta_Sans']">
+              Sender Name
+            </label>
             <input
-              type="email"
-              value={domainForm.replyTo}
-              onChange={(e) => setDomainForm(prev => ({ ...prev, replyTo: e.target.value }))}
-              placeholder="support@example.com"
+              type="text"
+              value={domainForm.senderName}
+              onChange={(e) => setDomainForm(prev => ({ ...prev, senderName: e.target.value }))}
+              placeholder="Your Company Name"
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
             />
+            <p className="text-xs text-slate-400 mt-1">This will appear as the "From" name in emails</p>
           </div>
-          {domainFormError && <p className="text-xs text-red-500">{domainFormError}</p>}
-          <div className="flex justify-end gap-3 pt-2">
-            <Button variant="secondary" onClick={() => setShowAddDomain(false)}>Cancel</Button>
-            <Button variant="primary" onClick={handleAddDomainSubmit}>Add Domain</Button>
+          
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-['Plus_Jakarta_Sans']">
+              Email Address
+            </label>
+            <input
+              type="email"
+              value={domainForm.emailAddress}
+              onChange={(e) => setDomainForm(prev => ({ ...prev, emailAddress: e.target.value }))}
+              placeholder="hello@example.com"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+            />
+            <p className="text-xs text-slate-400 mt-1">The email address you'll send from</p>
+          </div>
+          
+          {domainFormError && (
+            <div className="bg-red-50 border border-red-100 rounded-lg p-3">
+              <p className="text-xs text-red-600">{domainFormError}</p>
+            </div>
+          )}
+          
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="secondary" onClick={() => setShowAddDomain(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleAddDomainSubmit} loading={isSubmitting}>
+              {isSubmitting ? 'Adding Domain...' : 'Add Domain'}
+            </Button>
           </div>
         </div>
       </Modal>
 
+      {/* Modal: DNS Instructions - Step 2 */}
+      <Modal isOpen={showDNSInstructions} onClose={() => setShowDNSInstructions(false)} title="DNS Configuration Required" size="lg">
+        <DNSInstructions 
+          domain={newlyAddedDomain?.domain || 'yourdomain.com'} 
+          onClose={() => setShowDNSInstructions(false)}
+        />
+      </Modal>
+
       {/* Modal: Link WhatsApp Number */}
       <Modal isOpen={showLinkNumber} onClose={() => setShowLinkNumber(false)} title="Link WhatsApp Business Number">
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1 font-['Plus_Jakarta_Sans']">
-  Phone Number (with country code)
-</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-['Plus_Jakarta_Sans']">
+              Phone Number (with country code)
+            </label>
             <input
               type="tel"
               value={waForm.phoneNumber}
               onChange={(e) => setWaForm(prev => ({ ...prev, phoneNumber: e.target.value }))}
               placeholder="+91 98400 12345"
-              className="w-full rounded-xl border border-slate-200 bg-white px-2 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1 font-['Plus_Jakarta_Sans']">
-  Account Name
-</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5 font-['Plus_Jakarta_Sans']">
+              Account Name
+            </label>
             <input
               type="text"
               value={waForm.accountName}
@@ -602,7 +754,7 @@ export default function SenderIdentityTab() {
             />
           </div>
           {waFormError && <p className="text-xs text-red-500">{waFormError}</p>}
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex justify-end gap-3 pt-4">
             <Button variant="secondary" onClick={() => setShowLinkNumber(false)}>Cancel</Button>
             <Button variant="primary" onClick={handleLinkNumberSubmit}>Link Number</Button>
           </div>

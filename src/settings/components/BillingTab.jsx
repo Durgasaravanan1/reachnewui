@@ -110,12 +110,11 @@
 
 
 // BillingTab.jsx – Plan Usage & Invoices with working Upgrade button
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const cn = (...classes) => classes.filter(Boolean).join(' ');
-const formatNumber = (num) => num?.toLocaleString() || '0';
 
-// Updated Icon to match the image (Arrow Up)
+// Icons
 const TrendingUpIcon = () => (
   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
     <path strokeLinecap="round" strokeLinejoin="round" d="M8 7l4-4m0 0l4 4m-4-4v18" />
@@ -128,14 +127,42 @@ const XIcon = () => (
   </svg>
 );
 
-const Button = ({ children, variant, leftIcon, onClick, disabled, loading }) => {
-  const base = "inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed";
+const DownloadIcon = () => (
+  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0 0l-3-3m3 3l3-3" />
+  </svg>
+);
+
+const RefreshIcon = () => (
+  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+  </svg>
+);
+
+const ChevronLeftIcon = () => (
+  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+  </svg>
+);
+
+const ChevronRightIcon = () => (
+  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+  </svg>
+);
+
+const Button = ({ children, variant, leftIcon, onClick, disabled, loading, size = 'md' }) => {
+  const base = "inline-flex items-center gap-2 rounded-lg font-bold transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed";
   const variants = { 
     primary: "bg-[#4F46E5] text-white hover:bg-indigo-700", 
     secondary: "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50" 
   };
+  const sizes = {
+    sm: "px-3 py-1.5 text-xs",
+    md: "px-4 py-2 text-sm"
+  };
   return (
-    <button onClick={onClick} disabled={disabled || loading} className={cn(base, variants[variant] || variants.secondary)}>
+    <button onClick={onClick} disabled={disabled || loading} className={cn(base, variants[variant] || variants.secondary, sizes[size])}>
       {loading && <div className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" />}
       {leftIcon && !loading && leftIcon}
       {children}
@@ -149,14 +176,14 @@ const ProgressBar = ({ label, used, limit, icon }) => {
   const barColor = isOverLimit ? 'bg-[#C2410C]' : 'bg-[#4F46E5]';
   
   return (
-    <div className="mb-2">
-      <div className="flex justify-between items-center mb-1">
+    <div className="mb-6">
+      <div className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-2">
           <span className="text-lg">{icon}</span>
-          <span className="text-[13px] font-bold text-slate-800">{label}</span>
+          <span className="text-[14px] font-semibold text-slate-800">{label}</span>
         </div>
         <span className="text-[14px] text-slate-400 font-medium">
-          {formatNumber(used)} / {formatNumber(limit)}
+          {used.toLocaleString()} / {limit.toLocaleString()}
         </span>
       </div>
       <div className="h-[6px] bg-slate-100 rounded-full overflow-hidden">
@@ -166,7 +193,7 @@ const ProgressBar = ({ label, used, limit, icon }) => {
         />
       </div>
       {isOverLimit && (
-        <p className="text-[13px] font-bold text-[#C2410C] mt-1 flex items-center gap-1">
+        <p className="text-[13px] font-bold text-[#C2410C] mt-2 flex items-center gap-1">
           ⚠ Limit reached — upgrade to continue.
         </p>
       )}
@@ -174,7 +201,6 @@ const ProgressBar = ({ label, used, limit, icon }) => {
   );
 };
 
-// Modal Component
 const Modal = ({ isOpen, onClose, title, children, footer }) => {
   if (!isOpen) return null;
   return (
@@ -193,6 +219,93 @@ const Modal = ({ isOpen, onClose, title, children, footer }) => {
   );
 };
 
+// API calls for invoices
+const fetchInvoices = async (page = 1, limit = 10) => {
+  console.log(`[API] Fetching invoices - Page: ${page}, Limit: ${limit}`);
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  // Simulated API response
+  return {
+    success: true,
+    data: {
+      invoices: [
+        { 
+          id: 'INV-2026-001', 
+          date: '2026-05-15', 
+          formattedDate: 'May 15, 2026', 
+          amount: 4999, 
+          currency: '₹',
+          formattedAmount: '₹4,999',
+          status: 'paid', 
+          pdfUrl: '/invoices/inv-2026-001.pdf',
+          description: 'Growth Plan - May 2026'
+        },
+        { 
+          id: 'INV-2026-002', 
+          date: '2026-04-15', 
+          formattedDate: 'Apr 15, 2026', 
+          amount: 4999, 
+          currency: '₹',
+          formattedAmount: '₹4,999',
+          status: 'paid', 
+          pdfUrl: '/invoices/inv-2026-002.pdf',
+          description: 'Growth Plan - April 2026'
+        },
+        { 
+          id: 'INV-2026-003', 
+          date: '2026-03-15', 
+          formattedDate: 'Mar 15, 2026', 
+          amount: 4999, 
+          currency: '₹',
+          formattedAmount: '₹4,999',
+          status: 'paid', 
+          pdfUrl: '/invoices/inv-2026-003.pdf',
+          description: 'Growth Plan - March 2026'
+        },
+        { 
+          id: 'INV-2026-004', 
+          date: '2026-02-15', 
+          formattedDate: 'Feb 15, 2026', 
+          amount: 4999, 
+          currency: '₹',
+          formattedAmount: '₹4,999',
+          status: 'paid', 
+          pdfUrl: '/invoices/inv-2026-004.pdf',
+          description: 'Growth Plan - February 2026'
+        },
+        { 
+          id: 'INV-2026-005', 
+          date: '2026-01-15', 
+          formattedDate: 'Jan 15, 2026', 
+          amount: 4999, 
+          currency: '₹',
+          formattedAmount: '₹4,999',
+          status: 'paid', 
+          pdfUrl: '/invoices/inv-2026-005.pdf',
+          description: 'Growth Plan - January 2026'
+        }
+      ],
+      pagination: {
+        currentPage: page,
+        totalPages: 3,
+        totalItems: 12,
+        itemsPerPage: limit
+      }
+    }
+  };
+};
+
+const downloadInvoice = async (invoiceId) => {
+  console.log(`[API] Downloading invoice: ${invoiceId}`);
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // In production, this would trigger a file download
+  // window.open(`/api/invoices/${invoiceId}/download`, '_blank');
+  
+  alert(`Downloading invoice ${invoiceId}...`);
+  return { success: true };
+};
+
 export default function BillingTab() {
   const [billing, setBilling] = useState({
     planName: 'GROWTH PLAN',
@@ -207,6 +320,13 @@ export default function BillingTab() {
     contactsLimit: 50000,
   });
 
+  // Invoice state
+  const [invoices, setInvoices] = useState([]);
+  const [isLoadingInvoices, setIsLoadingInvoices] = useState(true);
+  const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalItems: 0 });
+  const [isDownloading, setIsDownloading] = useState(null);
+
+  // Upgrade modal state
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isUpgrading, setIsUpgrading] = useState(false);
@@ -244,6 +364,48 @@ export default function BillingTab() {
     },
   ];
 
+  // Load invoices on component mount and page change
+  useEffect(() => {
+    loadInvoices(pagination.currentPage);
+  }, [pagination.currentPage]);
+
+  const loadInvoices = async (page) => {
+    setIsLoadingInvoices(true);
+    try {
+      const response = await fetchInvoices(page, 10);
+      if (response.success) {
+        setInvoices(response.data.invoices);
+        setPagination(response.data.pagination);
+      }
+    } catch (error) {
+      console.error('Failed to load invoices:', error);
+    } finally {
+      setIsLoadingInvoices(false);
+    }
+  };
+
+  const handleDownloadInvoice = async (invoice) => {
+    setIsDownloading(invoice.id);
+    try {
+      await downloadInvoice(invoice.id);
+    } catch (error) {
+      console.error('Failed to download invoice:', error);
+      alert('Failed to download invoice. Please try again.');
+    } finally {
+      setIsDownloading(null);
+    }
+  };
+
+  const handleRefreshInvoices = () => {
+    loadInvoices(pagination.currentPage);
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages) {
+      setPagination(prev => ({ ...prev, currentPage: newPage }));
+    }
+  };
+
   const handleUpgradeClick = () => {
     setShowUpgradeModal(true);
     setSelectedPlan(null);
@@ -258,7 +420,6 @@ export default function BillingTab() {
     
     setIsUpgrading(true);
     
-    // Simulate API call
     setTimeout(() => {
       setBilling({
         ...billing,
@@ -282,23 +443,36 @@ export default function BillingTab() {
     setSelectedPlan(null);
   };
 
+  const getStatusBadge = (status) => {
+    if (status === 'paid') {
+      return (
+        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-700">
+          Paid
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-amber-100 text-amber-700">
+        Pending
+      </span>
+    );
+  };
+
   return (
-    <div className="max-w-6xl mx-auto p-4 ">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Current Plan Section */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
           <div>
-            <h3 className="text-[14px] font-semibold text-slate-900">Current Plan</h3>
-            <p className="text-[12px] text-slate-400 mt-1">Renews on {billing.renewsAt}</p>
+            <h3 className="text-[16px] font-bold text-slate-900">Current Plan</h3>
+            <p className="text-[13px] text-slate-400 mt-1">Renews on {billing.renewsAt}</p>
           </div>
           <Button variant="primary" leftIcon={<TrendingUpIcon />} onClick={handleUpgradeClick}>
             Upgrade Plan
           </Button>
         </div>
 
-        {/* Plan Banner */}
-         <div className="rounded-2xl bg-[#EEF2FF] px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6"> 
+        <div className="rounded-2xl bg-[#EEF2FF] px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <p className="text-[12px] font-bold text-[#4F46E5] uppercase tracking-wide mb-1">
               {billing.planName}
@@ -309,14 +483,13 @@ export default function BillingTab() {
             </div>
           </div>
           <div className="text-left sm:text-right text-[13px] font-medium text-[#4F46E5]/80 space-y-0.5">
-            <p>{formatNumber(billing.emailsLimit)} emails/month</p>
-            <p>{formatNumber(billing.whatsappLimit)} WhatsApp/month</p>
-            <p>{formatNumber(billing.contactsLimit)} contacts</p>
+            <p>{billing.emailsLimit.toLocaleString()} emails/month</p>
+            <p>{billing.whatsappLimit.toLocaleString()} WhatsApp/month</p>
+            <p>{billing.contactsLimit.toLocaleString()} contacts</p>
           </div>
         </div>
 
-        {/* Usage Meters */}
-        <div className="space-y-1">
+        <div className="space-y-4">
           <ProgressBar 
             label="Emails Sent" 
             icon="📧" 
@@ -336,6 +509,134 @@ export default function BillingTab() {
             limit={billing.contactsLimit} 
           />
         </div>
+      </div>
+
+      {/* Invoice History Section */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-[16px] font-bold text-slate-900">Invoice History</h3>
+            <p className="text-[13px] text-slate-400 mt-1">
+              {pagination.totalItems} total invoices
+            </p>
+          </div>
+          <Button 
+            variant="secondary" 
+            size="sm" 
+            leftIcon={<RefreshIcon />} 
+            onClick={handleRefreshInvoices}
+            disabled={isLoadingInvoices}
+          >
+            Refresh
+          </Button>
+        </div>
+
+        {isLoadingInvoices ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="animate-pulse">
+                <div className="h-16 bg-slate-100 rounded-xl"></div>
+              </div>
+            ))}
+          </div>
+        ) : invoices.length === 0 ? (
+          <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-xl">
+            <p className="text-sm text-slate-400">No invoices found</p>
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50">
+                    <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      Invoice #
+                    </th>
+                    <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      Description
+                    </th>
+                    <th className="px-4 py-3 text-right text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-4 py-3 text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-right text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {invoices.map((invoice) => (
+                    <tr key={invoice.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-4 py-4">
+                        <span className="font-mono text-sm font-semibold text-slate-700">
+                          {invoice.id}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-slate-500">
+                        {invoice.formattedDate}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-slate-500">
+                        {invoice.description}
+                      </td>
+                      <td className="px-4 py-4 text-right font-semibold text-slate-700">
+                        {invoice.formattedAmount}
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        {getStatusBadge(invoice.status)}
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          leftIcon={<DownloadIcon />}
+                          onClick={() => handleDownloadInvoice(invoice)}
+                          loading={isDownloading === invoice.id}
+                          disabled={isDownloading === invoice.id}
+                        >
+                          PDF
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {pagination.totalPages > 1 && (
+              <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-100">
+                <div className="text-sm text-slate-500">
+                  Page {pagination.currentPage} of {pagination.totalPages}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => handlePageChange(pagination.currentPage - 1)}
+                    disabled={pagination.currentPage === 1}
+                  >
+                    <ChevronLeftIcon />
+                    Previous
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => handlePageChange(pagination.currentPage + 1)}
+                    disabled={pagination.currentPage === pagination.totalPages}
+                  >
+                    Next
+                    <ChevronRightIcon />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* Upgrade Plan Modal */}
@@ -415,7 +716,7 @@ export default function BillingTab() {
             })}
           </div>
           
-          <div className="mt-2 p-3 bg-slate-50 rounded-lg">
+          <div className="mt-4 p-3 bg-slate-50 rounded-lg">
             <p className="text-xs text-slate-500 text-center">
               All plans include unlimited team members, API access, and 24/7 support. 
               Prices are in INR and billed monthly. No hidden fees.

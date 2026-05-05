@@ -213,11 +213,9 @@ const PowerIcon = () => (
   </svg>
 );
 
-const DotsIcon = () => (
-  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="1" fill="currentColor" />
-    <circle cx="12" cy="5" r="1" fill="currentColor" />
-    <circle cx="12" cy="19" r="1" fill="currentColor" />
+const CheckIcon = () => (
+  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
   </svg>
 );
 
@@ -263,7 +261,7 @@ const ScopeBadge = ({ children }) => (
   </span>
 );
 
-const Input = ({ label, placeholder, value, onChange, type = 'text' }) => (
+const Input = ({ label, placeholder, value, onChange, type = 'text', error }) => (
   <div className="space-y-1">
     <label className="block text-sm font-semibold text-slate-700">{label}</label>
     <input
@@ -271,17 +269,36 @@ const Input = ({ label, placeholder, value, onChange, type = 'text' }) => (
       placeholder={placeholder}
       value={value}
       onChange={onChange}
-      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+      className={cn(
+        "w-full rounded-xl border bg-white px-4 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500",
+        error ? "border-red-300" : "border-slate-200"
+      )}
     />
+    {error && <p className="text-xs text-red-500">{error}</p>}
   </div>
+);
+
+const Checkbox = ({ label, description, checked, onChange }) => (
+  <label className="flex items-start gap-3 cursor-pointer group">
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={onChange}
+      className="mt-0.5 w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+    />
+    <div className="flex-1">
+      <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">{label}</span>
+      {description && <p className="text-xs text-slate-400 mt-0.5">{description}</p>}
+    </div>
+  </label>
 );
 
 const Modal = ({ open, onClose, title, description, children, footer }) => {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100">
+      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 bg-white z-10 flex justify-between items-center px-6 py-4 border-b border-slate-100">
           <div>
             <h3 className="text-lg font-bold text-slate-900">{title}</h3>
             {description && <p className="text-xs text-slate-400 mt-0.5">{description}</p>}
@@ -292,13 +309,65 @@ const Modal = ({ open, onClose, title, description, children, footer }) => {
         </div>
         <div className="px-6 py-4">{children}</div>
         {footer && (
-          <div className="flex justify-end gap-2 px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-2xl">
+          <div className="sticky bottom-0 bg-white flex justify-end gap-2 px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-2xl">
             {footer}
           </div>
         )}
       </div>
     </div>
   );
+};
+
+// Available webhook events
+const WEBHOOK_EVENTS = [
+  { id: 'campaign.sent', label: 'Campaign Sent', description: 'When a campaign is dispatched' },
+  { id: 'campaign.opened', label: 'Campaign Opened', description: 'When a recipient opens an email' },
+  { id: 'campaign.clicked', label: 'Campaign Clicked', description: 'When a link is clicked in a campaign' },
+  { id: 'campaign.bounced', label: 'Campaign Bounced', description: 'When an email bounces' },
+  { id: 'campaign.completed', label: 'Campaign Completed', description: 'When a campaign finishes sending' },
+  { id: 'contact.created', label: 'Contact Created', description: 'When a new contact is added' },
+  { id: 'contact.updated', label: 'Contact Updated', description: 'When contact details change' },
+  { id: 'contact.unsubscribed', label: 'Contact Unsubscribed', description: 'When a contact unsubscribes' },
+  { id: 'list.created', label: 'List Created', description: 'When a new list is created' },
+  { id: 'workflow.started', label: 'Workflow Started', description: 'When an automation workflow starts' },
+  { id: 'workflow.completed', label: 'Workflow Completed', description: 'When a workflow finishes' },
+  { id: 'workflow.failed', label: 'Workflow Failed', description: 'When a workflow step fails' },
+];
+
+// Available API Key Scopes
+const API_SCOPES = [
+  { id: 'contacts:read', label: 'contacts:read', description: 'View contacts and contact lists' },
+  { id: 'contacts:write', label: 'contacts:write', description: 'Create, update, and delete contacts' },
+  { id: 'campaigns:read', label: 'campaigns:read', description: 'View campaigns and their analytics' },
+  { id: 'campaigns:write', label: 'campaigns:write', description: 'Create and send campaigns' },
+  { id: 'analytics:read', label: 'analytics:read', description: 'Access analytics and reporting data' },
+  { id: 'webhooks:manage', label: 'webhooks:manage', description: 'Create and manage webhook endpoints' },
+];
+
+// Simulated API calls
+const createWebhook = async (url, events) => {
+  console.log(`[API] Creating webhook: ${url}, Events: ${events.join(', ')}`);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  return {
+    success: true,
+    webhook: { url, events: events.join(', '), status: 'active' }
+  };
+};
+
+const createAPIKey = async (name, scopes) => {
+  console.log(`[API] Creating API Key: ${name}, Scopes: ${scopes.join(', ')}`);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  return {
+    success: true,
+    apiKey: {
+      id: `key_${Date.now()}`,
+      name,
+      prefix: `wyr_${Math.random().toString(36).substring(2, 8)}...`,
+      scopes,
+      lastUsed: 'never',
+      status: 'active'
+    }
+  };
 };
 
 export default function IntegrationsTab() {
@@ -318,38 +387,67 @@ export default function IntegrationsTab() {
   // Modal states
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [newKeyName, setNewKeyName] = useState('');
+  const [selectedScopes, setSelectedScopes] = useState(['contacts:read']);
+  const [keyNameError, setKeyNameError] = useState('');
   const [isCreatingKey, setIsCreatingKey] = useState(false);
   
   const [showWebhookModal, setShowWebhookModal] = useState(false);
-  const [newWebhook, setNewWebhook] = useState({ url: '', events: '' });
+  const [newWebhook, setNewWebhook] = useState({ url: '', events: [] });
+  const [webhookUrlError, setWebhookUrlError] = useState('');
   const [isAddingWebhook, setIsAddingWebhook] = useState(false);
 
   useEffect(() => {
     setTimeout(() => setIsLoading(false), 500);
   }, []);
 
-  // Create API Key
-  const handleCreateKey = () => {
+  // Toggle scope selection
+  const toggleScope = (scopeId) => {
+    setSelectedScopes(prev => 
+      prev.includes(scopeId)
+        ? prev.filter(s => s !== scopeId)
+        : [...prev, scopeId]
+    );
+  };
+
+  // Select/Deselect all scopes
+  const selectAllScopes = () => {
+    if (selectedScopes.length === API_SCOPES.length) {
+      setSelectedScopes([]);
+    } else {
+      setSelectedScopes(API_SCOPES.map(s => s.id));
+    }
+  };
+
+  // Create API Key with scopes
+  const handleCreateKey = async () => {
     if (!newKeyName.trim()) {
-      alert('Key name is required');
+      setKeyNameError('Key name is required');
       return;
     }
+    
+    if (selectedScopes.length === 0) {
+      alert('Please select at least one scope');
+      return;
+    }
+    
+    setKeyNameError('');
     setIsCreatingKey(true);
-    setTimeout(() => {
-      const newKey = {
-        id: `key_${Date.now()}`,
-        name: newKeyName,
-        prefix: `wyr_${Math.random().toString(36).substring(2, 8)}...`,
-        scopes: ['contacts:read'],
-        lastUsed: 'never',
-        status: 'active',
-      };
-      setApiKeys(prev => [...prev, newKey]);
+    
+    try {
+      const result = await createAPIKey(newKeyName, selectedScopes);
+      
+      if (result.success) {
+        setApiKeys(prev => [...prev, result.apiKey]);
+        setIsCreatingKey(false);
+        setShowKeyModal(false);
+        setNewKeyName('');
+        setSelectedScopes(['contacts:read']);
+        alert(`API Key "${newKeyName}" created successfully!`);
+      }
+    } catch (error) {
+      alert('Failed to create API key. Please try again.');
       setIsCreatingKey(false);
-      setShowKeyModal(false);
-      setNewKeyName('');
-      alert(`API Key "${newKeyName}" created successfully!`);
-    }, 800);
+    }
   };
 
   // Deactivate API Key
@@ -360,30 +458,69 @@ export default function IntegrationsTab() {
     }
   };
 
-  // Create Webhook
-  const handleAddWebhook = () => {
+  // Create Webhook with API
+  const handleAddWebhook = async () => {
+    // Validate URL
     if (!newWebhook.url.trim()) {
-      alert('URL is required');
+      setWebhookUrlError('URL is required');
       return;
     }
-    if (!newWebhook.events.trim()) {
-      alert('Events are required');
+    
+    // Validate URL format
+    const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+    if (!urlPattern.test(newWebhook.url)) {
+      setWebhookUrlError('Please enter a valid URL (e.g., https://example.com/webhook)');
       return;
     }
+    
+    // Validate events selection
+    if (newWebhook.events.length === 0) {
+      alert('Please select at least one event');
+      return;
+    }
+    
+    setWebhookUrlError('');
     setIsAddingWebhook(true);
-    setTimeout(() => {
-      const newHook = {
-        id: `webhook_${Date.now()}`,
-        url: newWebhook.url,
-        events: newWebhook.events,
-        status: 'active',
-      };
-      setWebhooks(prev => [...prev, newHook]);
+    
+    try {
+      const result = await createWebhook(newWebhook.url, newWebhook.events);
+      
+      if (result.success) {
+        const newHook = {
+          id: `webhook_${Date.now()}`,
+          url: newWebhook.url,
+          events: newWebhook.events.join(', '),
+          status: 'active',
+        };
+        setWebhooks(prev => [...prev, newHook]);
+        setIsAddingWebhook(false);
+        setShowWebhookModal(false);
+        setNewWebhook({ url: '', events: [] });
+        alert('Webhook endpoint added successfully!');
+      }
+    } catch (error) {
+      alert('Failed to create webhook. Please try again.');
       setIsAddingWebhook(false);
-      setShowWebhookModal(false);
-      setNewWebhook({ url: '', events: '' });
-      alert('Webhook endpoint added successfully!');
-    }, 600);
+    }
+  };
+
+  // Toggle event selection
+  const toggleEvent = (eventId) => {
+    setNewWebhook(prev => ({
+      ...prev,
+      events: prev.events.includes(eventId)
+        ? prev.events.filter(e => e !== eventId)
+        : [...prev.events, eventId]
+    }));
+  };
+
+  // Select/Deselect all events
+  const selectAllEvents = () => {
+    if (newWebhook.events.length === WEBHOOK_EVENTS.length) {
+      setNewWebhook(prev => ({ ...prev, events: [] }));
+    } else {
+      setNewWebhook(prev => ({ ...prev, events: WEBHOOK_EVENTS.map(e => e.id) }));
+    }
   };
 
   // Delete Webhook
@@ -429,29 +566,41 @@ export default function IntegrationsTab() {
       {/* Webhooks */}
       <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-[15px] font-bold text-slate-900">Webhooks</h3>
+          <div>
+            <h3 className="text-[15px] font-bold text-slate-900">Webhooks</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Receive real-time events via HTTP endpoints</p>
+          </div>
           <Button variant="primary" size="sm" leftIcon={<PlusIcon />} onClick={() => setShowWebhookModal(true)}>
             Add Endpoint
           </Button>
         </div>
         <div className="space-y-3">
-          {webhooks.map((webhook) => (
-            <div key={webhook.id} className="rounded-xl border border-slate-200 p-5 flex items-center gap-4">
-              <div className="h-11 w-11 rounded-xl bg-[#EEF2FF] flex items-center justify-center text-xl shrink-0">⚡</div>
-              <div className="flex-1">
-                <p className="font-bold text-[15px] text-slate-900">{webhook.url}</p>
-                <p className="text-[13px] text-slate-400 mt-0.5">Events: {webhook.events}</p>
-              </div>
-              <div className="flex items-center gap-4">
-                <button onClick={() => handleToggleWebhookStatus(webhook.id, webhook.status)}>
-                  <StatusBadge variant={webhook.status}>{webhook.status === 'active' ? 'Active' : 'Inactive'}</StatusBadge>
-                </button>
-                <Button variant="ghost" onClick={() => handleDeleteWebhook(webhook.id, webhook.url)}>
-                  <PowerIcon />
-                </Button>
-              </div>
+          {webhooks.length === 0 ? (
+            <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-xl">
+              <p className="text-sm text-slate-400">No webhook endpoints configured</p>
+              <Button variant="secondary" size="sm" onClick={() => setShowWebhookModal(true)} className="mt-3">
+                Add your first webhook
+              </Button>
             </div>
-          ))}
+          ) : (
+            webhooks.map((webhook) => (
+              <div key={webhook.id} className="rounded-xl border border-slate-200 p-5 flex items-center gap-4">
+                <div className="h-11 w-11 rounded-xl bg-[#EEF2FF] flex items-center justify-center text-xl shrink-0">⚡</div>
+                <div className="flex-1">
+                  <p className="font-bold text-[15px] text-slate-900">{webhook.url}</p>
+                  <p className="text-[13px] text-slate-400 mt-0.5">Events: {webhook.events}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <button onClick={() => handleToggleWebhookStatus(webhook.id, webhook.status)}>
+                    <StatusBadge variant={webhook.status}>{webhook.status === 'active' ? 'Active' : 'Inactive'}</StatusBadge>
+                  </button>
+                  <Button variant="ghost" onClick={() => handleDeleteWebhook(webhook.id, webhook.url)}>
+                    <PowerIcon />
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -459,7 +608,10 @@ export default function IntegrationsTab() {
       <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-[15px] font-bold text-slate-900">API Keys</h3>
-          <Button variant="primary" size="sm" leftIcon={<PlusIcon />} onClick={() => setShowKeyModal(true)}>
+          <Button variant="primary" size="sm" leftIcon={<PlusIcon />} onClick={() => {
+            setSelectedScopes(['contacts:read']);
+            setShowKeyModal(true);
+          }}>
             Create Key
           </Button>
         </div>
@@ -467,7 +619,6 @@ export default function IntegrationsTab() {
           <table className="w-full">
             <thead>
               <tr className="bg-slate-100 border-y border-slate-200">
-              
                 <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">Key Name</th>
                 <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">Prefix</th>
                 <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">Scopes</th>
@@ -482,7 +633,7 @@ export default function IntegrationsTab() {
                   <td className="px-4 py-5 text-[14px] font-bold text-slate-700">{key.name}</td>
                   <td className="px-4 py-5 font-mono text-[13px] text-slate-500">{key.prefix}</td>
                   <td className="px-6 py-5">
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       {key.scopes.map(s => <ScopeBadge key={s}>{s}</ScopeBadge>)}
                     </div>
                   </td>
@@ -500,54 +651,211 @@ export default function IntegrationsTab() {
         </div>
       </div>
 
-      {/* Modal: Create API Key */}
+      {/* Modal: Create API Key with Scope Selection */}
       <Modal
         open={showKeyModal}
-        onClose={() => setShowKeyModal(false)}
+        onClose={() => {
+          setShowKeyModal(false);
+          setNewKeyName('');
+          setSelectedScopes(['contacts:read']);
+          setKeyNameError('');
+        }}
         title="Create API Key"
-        description="This key will have access to your workspace data."
+        description="Define permissions for this API key. Only grant necessary access."
         footer={
           <>
-            <Button variant="secondary" onClick={() => setShowKeyModal(false)}>Cancel</Button>
-            <Button variant="primary" loading={isCreatingKey} onClick={handleCreateKey}>Create Key</Button>
+            <Button variant="secondary" onClick={() => {
+              setShowKeyModal(false);
+              setNewKeyName('');
+              setSelectedScopes(['contacts:read']);
+              setKeyNameError('');
+            }}>
+              Cancel
+            </Button>
+            <Button variant="primary" loading={isCreatingKey} onClick={handleCreateKey}>
+              {isCreatingKey ? 'Creating...' : 'Create Key'}
+            </Button>
           </>
         }
       >
-        <Input
-          label="Key Name"
-          placeholder="e.g., WynCRM Sync, Analytics Export"
-          value={newKeyName}
-          onChange={(e) => setNewKeyName(e.target.value)}
-        />
+        <div className="space-y-5">
+          {/* Key Name Input */}
+          <Input
+            label="Key Name"
+            placeholder="e.g., WynCRM Sync, Analytics Export"
+            value={newKeyName}
+            onChange={(e) => setNewKeyName(e.target.value)}
+            error={keyNameError}
+          />
+
+          {/* Scopes Selection */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-semibold text-slate-700">Permissions (Scopes)</label>
+              <button 
+                onClick={selectAllScopes}
+                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+              >
+                {selectedScopes.length === API_SCOPES.length ? 'Deselect All' : 'Select All'}
+              </button>
+            </div>
+            
+            <div className="border border-slate-200 rounded-xl overflow-hidden">
+              <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
+                <span className="text-xs font-semibold text-slate-500">
+                  {selectedScopes.length} of {API_SCOPES.length} selected
+                </span>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {API_SCOPES.map((scope) => (
+                  <div key={scope.id} className="px-4 py-3 hover:bg-slate-50 transition-colors">
+                    <Checkbox
+                      label={scope.label}
+                      description={scope.description}
+                      checked={selectedScopes.includes(scope.id)}
+                      onChange={() => toggleScope(scope.id)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
+            <p className="text-xs text-amber-700">
+              ⚠️ <span className="font-semibold">Security Note:</span> API keys have the same permissions as your account. 
+              Keep them secure and rotate them regularly.
+            </p>
+          </div>
+        </div>
       </Modal>
 
       {/* Modal: Add Webhook */}
       <Modal
         open={showWebhookModal}
-        onClose={() => setShowWebhookModal(false)}
+        onClose={() => {
+          setShowWebhookModal(false);
+          setNewWebhook({ url: '', events: [] });
+          setWebhookUrlError('');
+        }}
         title="Add Webhook Endpoint"
-        description="Receive events when certain actions happen."
+        description="Receive real-time events when certain actions happen in your workspace."
         footer={
           <>
-            <Button variant="secondary" onClick={() => setShowWebhookModal(false)}>Cancel</Button>
-            <Button variant="primary" loading={isAddingWebhook} onClick={handleAddWebhook}>Add Webhook</Button>
+            <Button variant="secondary" onClick={() => {
+              setShowWebhookModal(false);
+              setNewWebhook({ url: '', events: [] });
+              setWebhookUrlError('');
+            }}>
+              Cancel
+            </Button>
+            <Button variant="primary" loading={isAddingWebhook} onClick={handleAddWebhook}>
+              {isAddingWebhook ? 'Adding...' : 'Add Webhook'}
+            </Button>
           </>
         }
       >
-        <div className="space-y-4">
+        <div className="space-y-5">
+          {/* URL Input */}
           <Input
             label="Endpoint URL"
-            placeholder="https://your-domain.com/webhook"
+            placeholder="https://your-domain.com/webhook/receive"
             value={newWebhook.url}
             onChange={(e) => setNewWebhook(prev => ({ ...prev, url: e.target.value }))}
+            error={webhookUrlError}
           />
-          <Input
-            label="Events (comma separated)"
-            placeholder="campaign.sent, contact.created"
-            value={newWebhook.events}
-            onChange={(e) => setNewWebhook(prev => ({ ...prev, events: e.target.value }))}
-          />
-          <p className="text-xs text-slate-400">Example: campaign.sent, campaign.opened, contact.created</p>
+          <p className="text-xs text-slate-400 -mt-2">
+            We'll send POST requests to this URL when selected events occur.
+          </p>
+
+          {/* Events Multi-Checkbox */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-semibold text-slate-700">Events to Subscribe</label>
+              <button 
+                onClick={selectAllEvents}
+                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+              >
+                {newWebhook.events.length === WEBHOOK_EVENTS.length ? 'Deselect All' : 'Select All'}
+              </button>
+            </div>
+            
+            <div className="border border-slate-200 rounded-xl overflow-hidden">
+              <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
+                <span className="text-xs font-semibold text-slate-500">
+                  {newWebhook.events.length} of {WEBHOOK_EVENTS.length} selected
+                </span>
+              </div>
+              <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                {/* Campaign Events Section */}
+                <div className="bg-slate-50/50 px-4 py-2">
+                  <span className="text-xs font-bold text-slate-500 uppercase">Campaign Events</span>
+                </div>
+                {WEBHOOK_EVENTS.filter(e => e.id.startsWith('campaign.')).map((event) => (
+                  <div key={event.id} className="px-4 py-2.5 hover:bg-slate-50 transition-colors">
+                    <Checkbox
+                      label={event.label}
+                      description={event.description}
+                      checked={newWebhook.events.includes(event.id)}
+                      onChange={() => toggleEvent(event.id)}
+                    />
+                  </div>
+                ))}
+
+                {/* Contact Events Section */}
+                <div className="bg-slate-50/50 px-4 py-2">
+                  <span className="text-xs font-bold text-slate-500 uppercase">Contact Events</span>
+                </div>
+                {WEBHOOK_EVENTS.filter(e => e.id.startsWith('contact.')).map((event) => (
+                  <div key={event.id} className="px-4 py-2.5 hover:bg-slate-50 transition-colors">
+                    <Checkbox
+                      label={event.label}
+                      description={event.description}
+                      checked={newWebhook.events.includes(event.id)}
+                      onChange={() => toggleEvent(event.id)}
+                    />
+                  </div>
+                ))}
+
+                {/* List Events Section */}
+                <div className="bg-slate-50/50 px-4 py-2">
+                  <span className="text-xs font-bold text-slate-500 uppercase">List Events</span>
+                </div>
+                {WEBHOOK_EVENTS.filter(e => e.id.startsWith('list.')).map((event) => (
+                  <div key={event.id} className="px-4 py-2.5 hover:bg-slate-50 transition-colors">
+                    <Checkbox
+                      label={event.label}
+                      description={event.description}
+                      checked={newWebhook.events.includes(event.id)}
+                      onChange={() => toggleEvent(event.id)}
+                    />
+                  </div>
+                ))}
+
+                {/* Workflow Events Section */}
+                <div className="bg-slate-50/50 px-4 py-2">
+                  <span className="text-xs font-bold text-slate-500 uppercase">Workflow Events</span>
+                </div>
+                {WEBHOOK_EVENTS.filter(e => e.id.startsWith('workflow.')).map((event) => (
+                  <div key={event.id} className="px-4 py-2.5 hover:bg-slate-50 transition-colors">
+                    <Checkbox
+                      label={event.label}
+                      description={event.description}
+                      checked={newWebhook.events.includes(event.id)}
+                      onChange={() => toggleEvent(event.id)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
+            <p className="text-xs text-slate-500">
+              💡 <span className="font-semibold">Tip:</span> Webhook URLs must be publicly accessible over HTTPS. 
+              We'll send a test event when you save.
+            </p>
+          </div>
         </div>
       </Modal>
     </div>
