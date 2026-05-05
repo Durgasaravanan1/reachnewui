@@ -242,9 +242,9 @@
 //   );
 // }
 
-
-// Topbar.jsx — search moved to right side (near notification)
-import React, { useState } from "react";
+// Topbar.jsx — search + profile dropdown with working sign out
+import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 /* ── Font scoped only to topbar ── */
 const TopbarFont = () => (
@@ -387,13 +387,50 @@ const BellIcon = () => (
   </svg>
 );
 
-export default function Topbar({ title = "Dashboard", onMenuClick }) {
+export default function Topbar({ title = "Dashboard", onMenuClick, onSearch }) {
+  const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const dropdownRef = useRef(null);
   const badgeCount = 3;
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (onSearch) onSearch(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm, onSearch]);
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSignOut = () => {
+    // Clear any auth tokens / user data
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("user");
+    // You can also clear other app-specific keys if needed
+    // Then redirect to login
+    navigate("/login");
+  };
+
+  const handleProfileSettings = () => {
+    navigate("/settings");
+    setProfileOpen(false);
+  };
 
   return (
     <div className="tb-root">
-      <TopbarFont/>
+      <TopbarFont />
       <header style={{
         height: 64, display:"flex", alignItems:"center",
         padding:"0 24px", borderBottom:"1px solid #E5E9EF",
@@ -401,8 +438,7 @@ export default function Topbar({ title = "Dashboard", onMenuClick }) {
         fontFamily:"'Plus Jakarta Sans',sans-serif",
         gap: "12px",
       }}>
-
-        {/* Mobile hamburger (only visible on mobile via CSS) */}
+        {/* Mobile hamburger */}
         <button
           onClick={onMenuClick}
           className="tb-icon-btn tb-mobile-menu"
@@ -422,10 +458,10 @@ export default function Topbar({ title = "Dashboard", onMenuClick }) {
           {title}
         </div>
 
-        {/* Spacer (pushes everything to the right) */}
+        {/* Spacer */}
         <div style={{ flex: 1 }} />
 
-        {/* Search bar — right side, before icons */}
+        {/* Search bar */}
         <div style={{ width: "260px", maxWidth: "100%", marginRight: "8px" }}>
           <div style={{ position:"relative", width:"100%" }}>
             <span style={{ position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", display:"flex", alignItems:"center", pointerEvents:"none" }}>
@@ -435,6 +471,8 @@ export default function Topbar({ title = "Dashboard", onMenuClick }) {
               type="text"
               placeholder="Search..."
               className="tb-input"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               style={{
                 width:"100%", height:40, borderRadius:999,
                 border:"1.5px solid #E2E8F0", background:"#F8FAFC",
@@ -447,9 +485,8 @@ export default function Topbar({ title = "Dashboard", onMenuClick }) {
           </div>
         </div>
 
-        {/* Right icons (bell, help, user) */}
+        {/* Right icons */}
         <div style={{ display:"flex", alignItems:"center", gap:4, flexShrink:0 }}>
-
           {/* Bell */}
           <button
             className="tb-icon-btn"
@@ -475,10 +512,12 @@ export default function Topbar({ title = "Dashboard", onMenuClick }) {
             <span style={{ fontSize:20, fontWeight:800, color:"#EC4899", lineHeight:"22px", width:22, height:22, display:"flex", alignItems:"center", justifyContent:"center", userSelect:"none" }}>?</span>
           </button>
 
-          {/* User */}
+          {/* User with dropdown */}
           <div
+            ref={dropdownRef}
             className="tb-user"
-            style={{ display:"flex", alignItems:"center", gap:10, marginLeft:8, cursor:"pointer", padding:"4px 10px 4px 4px", borderRadius:10, transition:"background 0.15s" }}
+            onClick={() => setProfileOpen(!profileOpen)}
+            style={{ position:"relative", display:"flex", alignItems:"center", gap:10, marginLeft:8, cursor:"pointer", padding:"4px 10px 4px 4px", borderRadius:10, transition:"background 0.15s" }}
           >
             <div style={{ width:36, height:36, borderRadius:"50%", background:"#7C3AED", display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:13, fontWeight:700, flexShrink:0 }}>
               SA
@@ -486,11 +525,50 @@ export default function Topbar({ title = "Dashboard", onMenuClick }) {
             <span className="tb-user-name" style={{ fontSize:14, fontWeight:600, color:"#0F172A", whiteSpace:"nowrap" }}>
               Subramanian
             </span>
+
+            {/* Dropdown menu */}
+            {profileOpen && (
+              <div style={{
+                position:"absolute", top: "calc(100% + 8px)", right: 0,
+                width: 180, background:"#fff", borderRadius:12,
+                boxShadow:"0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.02)",
+                border:"1px solid #E2E8F0", zIndex: 100,
+                overflow:"hidden",
+              }}>
+                <button
+                  onClick={handleProfileSettings}
+                  style={{
+                    width:"100%", textAlign:"left", padding:"10px 16px",
+                    fontSize:13, fontWeight:500, color:"#1E293B",
+                    background:"none", border:"none", cursor:"pointer",
+                    transition:"background 0.15s",
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background="#F8FAFC"}
+                  onMouseLeave={(e) => e.currentTarget.style.background="#fff"}
+                >
+                  ⚙️ Profile Settings
+                </button>
+                <button
+                  onClick={handleSignOut}
+                  style={{
+                    width:"100%", textAlign:"left", padding:"10px 16px",
+                    fontSize:13, fontWeight:500, color:"#EF4444",
+                    background:"none", border:"none", cursor:"pointer",
+                    borderTop:"1px solid #F1F5F9",
+                    transition:"background 0.15s",
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background="#FEF2F2"}
+                  onMouseLeave={(e) => e.currentTarget.style.background="#fff"}
+                >
+                  🚪 Sign Out
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
-      <NotifPanel open={notifOpen} onClose={() => setNotifOpen(false)}/>
+      <NotifPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
     </div>
   );
 }
