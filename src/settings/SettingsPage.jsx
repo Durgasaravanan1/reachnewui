@@ -253,7 +253,6 @@
 //   );
 // }
 
-
 import React, { useState } from 'react';
 // Assuming these are imported correctly from your project structure
 import SenderIdentityTab from './components/SenderIdentityTab';
@@ -261,10 +260,12 @@ import TeamMembersTab from './components/TeamMembersTab';
 import NotificationsTab from './components/NotificationsTab';
 import IntegrationsTab from './components/IntegrationsTab';
 import BillingTab from './components/BillingTab';
+import ProfileTab from './components/ProfileTab'; // Add this import
 
 const cn = (...classes) => classes.filter(Boolean).join(' ');
 
 // Updated icons to match the image's colorful/emoji style
+const ProfileIcon = () => <span className="text-lg">👤</span>;
 const SenderIcon = () => <span className="text-lg">📧</span>;
 const TeamIcon = () => <span className="text-lg">👥</span>;
 const NotificationIcon = () => <span className="text-lg">🔔</span>;
@@ -272,9 +273,10 @@ const IntegrationIcon = () => <span className="text-lg">🔗</span>;
 const BillingIcon = () => <span className="text-lg">💳</span>;
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState('integrations');
+  const [activeTab, setActiveTab] = useState('profile'); // Changed default to 'profile'
 
   const tabs = [
+    { id: 'profile', label: 'Profile', icon: ProfileIcon },
     { id: 'sender', label: 'Sender Identity', icon: SenderIcon },
     { id: 'team', label: 'Team Members', icon: TeamIcon },
     { id: 'notifications', label: 'Notifications', icon: NotificationIcon },
@@ -284,6 +286,8 @@ export default function SettingsPage() {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'profile':
+        return <ProfileTab />;
       case 'sender':
         return <SenderIdentityTab />;
       case 'team':
@@ -295,7 +299,7 @@ export default function SettingsPage() {
       case 'billing':
         return <BillingTab />;
       default:
-        return <SenderIdentityTab />;
+        return <ProfileTab />;
     }
   };
 
@@ -308,7 +312,7 @@ export default function SettingsPage() {
             Settings
           </h1>
           <p className="text-sm text-[#64748B] mt-1">
-            Manage workspace configuration, sender identities, team, and integrations
+            Manage your profile, workspace configuration, sender identities, team, and integrations
           </p>
         </div>
 
@@ -346,7 +350,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Content Area - No separate white background */}
+          {/* Content Area */}
           <div className="flex-1 min-w-0">
             {renderContent()}
           </div>
