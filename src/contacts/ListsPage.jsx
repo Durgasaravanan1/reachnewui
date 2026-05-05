@@ -460,6 +460,7 @@
 
 
 // ListsPage.jsx – Exact UI from design (Audience Lists) – Tailwind only
+// ListsPage.jsx – Complete with Archive functionality
 import React, { useState } from 'react';
 
 /* ================= UTILS ================= */
@@ -482,17 +483,23 @@ const SearchIcon = () => (
   </svg>
 );
 const ArchiveIcon = () => (
-  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8" strokeLinecap="round" />
   </svg>
 );
 const TrashIcon = () => (
-  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeLinecap="round" />
   </svg>
 );
+const RestoreIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0z" />
+    <path d="M12 8v4l3 3M12 8v4l-3 3" strokeLinecap="round" />
+  </svg>
+);
 
-/* ================= MOCK DATA (based on screenshots) ================= */
+/* ================= MOCK DATA ================= */
 const MOCK_LISTS = [
   {
     id: '1',
@@ -547,7 +554,7 @@ const MOCK_LISTS = [
   {
     id: '6',
     listName: 'Enterprise Accounts',
-    description: 'High-value accounts',
+    description: 'Enterprise clients',
     contactCount: 340,
     emailEligible: 340,
     waEligible: 290,
@@ -608,9 +615,13 @@ const ConfirmModal = ({ open, onClose, onConfirm, title, message, isLoading }) =
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="px-6 py-4 border-b border-slate-100"><h3 className="text-lg font-bold text-slate-900">{title}</h3></div>
-        <div className="px-6 py-4"><p className="text-sm text-slate-600">{message}</p></div>
+      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 py-4 border-b border-slate-100">
+          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+        </div>
+        <div className="px-6 py-4">
+          <p className="text-sm text-slate-600">{message}</p>
+        </div>
         <div className="flex justify-end gap-2 px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-2xl">
           <Button variant="secondary" onClick={onClose} disabled={isLoading}>Cancel</Button>
           <Button variant="danger" onClick={onConfirm} loading={isLoading}>Confirm</Button>
@@ -623,20 +634,29 @@ const ConfirmModal = ({ open, onClose, onConfirm, title, message, isLoading }) =
 /* ================= MAIN PAGE ================= */
 export default function ListsPage() {
   const [lists, setLists] = useState(MOCK_LISTS);
+  const [archivedLists, setArchivedLists] = useState([]);
+  const [activeTab, setActiveTab] = useState('active');
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
+  const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
   const [selectedList, setSelectedList] = useState(null);
   const [newListName, setNewListName] = useState('');
   const [newListDesc, setNewListDesc] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
   const [formError, setFormError] = useState('');
 
   // Filter lists based on search term
   const filteredLists = lists.filter(list =>
+    list.listName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (list.description && list.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const filteredArchived = archivedLists.filter(list =>
     list.listName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (list.description && list.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -695,13 +715,42 @@ export default function ListsPage() {
     if (!selectedList) return;
     setIsArchiving(true);
     await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Move to archived lists
+    setArchivedLists(prev => [...prev, { ...selectedList, archivedAt: new Date().toISOString() }]);
     setLists(prev => prev.filter(l => l.id !== selectedList.id));
+    
     setIsArchiving(false);
     setIsArchiveModalOpen(false);
     setSelectedList(null);
   };
 
-  const totalLists = filteredLists.length;
+  const handleRestoreClick = (list) => {
+    setSelectedList(list);
+    setIsRestoreModalOpen(true);
+  };
+
+  const handleRestoreConfirm = async () => {
+    if (!selectedList) return;
+    setIsRestoring(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Move back to active lists
+    setLists(prev => [...prev, { ...selectedList, archivedAt: undefined }]);
+    setArchivedLists(prev => prev.filter(l => l.id !== selectedList.id));
+    
+    setIsRestoring(false);
+    setIsRestoreModalOpen(false);
+    setSelectedList(null);
+  };
+
+  const handlePermanentDelete = (list) => {
+    if (confirm(`Permanently delete "${list.listName}"? This action cannot be undone.`)) {
+      setArchivedLists(prev => prev.filter(l => l.id !== list.id));
+    }
+  };
+
+  const totalLists = activeTab === 'active' ? filteredLists.length : filteredArchived.length;
 
   return (
     <div className="p-4 md:p-6 bg-slate-50 min-h-screen">
@@ -720,6 +769,39 @@ export default function ListsPage() {
 
       {/* MAIN CARD */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        
+        {/* TAB SWITCHER - Active / Archived */}
+        <div className="border-b border-slate-100 px-6 pt-2">
+          <div className="flex gap-6">
+            <button
+              onClick={() => {
+                setActiveTab('active');
+                setSearchTerm('');
+              }}
+              className={`px-1 py-2.5 text-sm font-semibold transition-colors border-b-2 ${
+                activeTab === 'active'
+                  ? 'border-indigo-600 text-indigo-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Active Lists ({lists.length})
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('archived');
+                setSearchTerm('');
+              }}
+              className={`px-1 py-2.5 text-sm font-semibold transition-colors border-b-2 ${
+                activeTab === 'archived'
+                  ? 'border-indigo-600 text-indigo-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Archived Lists ({archivedLists.length})
+            </button>
+          </div>
+        </div>
+
         {/* SEARCH BAR & COUNT */}
         <div className="p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
           <SearchInput value={searchTerm} onChange={setSearchTerm} placeholder="Search lists..." />
@@ -739,53 +821,120 @@ export default function ListsPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">WA ELIGIBLE</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">CAMPAIGNS</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">LAST UPDATED</th>
-                <th className="px-4 py-3 text-left"></th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">ACTIONS</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredLists.map((list) => (
-                <tr key={list.id} className="hover:bg-slate-50 transition-colors group">
-                  <td className="px-4 py-3">
-                    <p className="font-semibold text-sm text-slate-800">{list.listName}</p>
-                    {list.description && <p className="text-xs text-slate-400 mt-0.5">{list.description}</p>}
-                  </td>
-                  <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.contactCount)}</td>
-                  <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.emailEligible)}</td>
-                  <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.waEligible)}</td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-indigo-50 text-indigo-600">
-                      {list.campaigns}
-                    </span>
-                   </td>
-                  <td className="px-4 py-3 text-xs text-slate-400">{formatDate(list.lastUpdated)}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" onClick={() => handleArchiveClick(list)} title="Archive list">
-                        <ArchiveIcon />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(list)} title="Delete list">
-                        <TrashIcon />
-                      </Button>
-                    </div>
-                   </td>
-                 </tr>
-              ))}
-              {filteredLists.length === 0 && (
-                <tr>
-                  <td colSpan="7" className="text-center py-12">
-                    <p className="text-base font-semibold text-slate-800">No lists found</p>
-                    <p className="text-sm text-slate-500 mt-1">
-                      {searchTerm ? `No results for "${searchTerm}"` : 'Create your first audience list'}
-                    </p>
-                    {!searchTerm && (
-                      <div className="mt-4">
-                        <Button variant="primary" leftIcon={<PlusIcon />} onClick={handleCreateList}>
-                          Create List
-                        </Button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
+              {activeTab === 'active' ? (
+                // ACTIVE LISTS - Show Archive and Delete buttons
+                filteredLists.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="text-center py-12">
+                      <p className="text-base font-semibold text-slate-800">No active lists found</p>
+                      <p className="text-sm text-slate-500 mt-1">
+                        {searchTerm ? `No results for "${searchTerm}"` : 'Create your first audience list'}
+                      </p>
+                      {!searchTerm && (
+                        <div className="mt-4">
+                          <Button variant="primary" leftIcon={<PlusIcon />} onClick={handleCreateList}>
+                            Create List
+                          </Button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredLists.map((list) => (
+                    <tr key={list.id} className="hover:bg-slate-50 transition-colors group">
+                      <td className="px-4 py-3">
+                        <p className="font-semibold text-sm text-slate-800">{list.listName}</p>
+                        {list.description && <p className="text-xs text-slate-400 mt-0.5">{list.description}</p>}
+                       </td>
+                      <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.contactCount)}</td>
+                      <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.emailEligible)}</td>
+                      <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.waEligible)}</td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-indigo-50 text-indigo-600">
+                          {list.campaigns}
+                        </span>
+                       </td>
+                      <td className="px-4 py-3 text-xs text-slate-400">{formatDate(list.lastUpdated)}</td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleArchiveClick(list)}
+                            title="Archive list"
+                          >
+                            <ArchiveIcon />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleDeleteClick(list)}
+                            title="Delete list"
+                          >
+                            <TrashIcon />
+                          </Button>
+                        </div>
+                       </td>
+                    </tr>
+                  ))
+                )
+              ) : (
+                // ARCHIVED LISTS - Show Restore and Permanent Delete buttons
+                filteredArchived.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="text-center py-12">
+                      <p className="text-base font-semibold text-slate-800">No archived lists found</p>
+                      <p className="text-sm text-slate-500 mt-1">
+                        {searchTerm ? `No results for "${searchTerm}"` : 'Archived lists will appear here'}
+                      </p>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredArchived.map((list) => (
+                    <tr key={list.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-4 py-3">
+                        <p className="font-semibold text-sm text-slate-800">{list.listName}</p>
+                        {list.description && <p className="text-xs text-slate-400 mt-0.5">{list.description}</p>}
+                        {list.archivedAt && (
+                          <p className="text-xs text-amber-600 mt-1">Archived: {formatDate(list.archivedAt)}</p>
+                        )}
+                       </td>
+                      <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.contactCount)}</td>
+                      <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.emailEligible)}</td>
+                      <td className="px-4 py-3 font-semibold text-sm text-slate-600">{formatNumber(list.waEligible)}</td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-slate-100 text-slate-500">
+                          {list.campaigns}
+                        </span>
+                       </td>
+                      <td className="px-4 py-3 text-xs text-slate-400">{formatDate(list.lastUpdated)}</td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button 
+                            variant="primary" 
+                            size="sm" 
+                            onClick={() => handleRestoreClick(list)}
+                            title="Restore list"
+                          >
+                            Restore
+                          </Button>
+                          <Button 
+                            variant="danger" 
+                            size="sm" 
+                            onClick={() => handlePermanentDelete(list)}
+                            title="Permanently delete"
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                       </td>
+                    </tr>
+                  ))
+                )
               )}
             </tbody>
           </table>
@@ -830,7 +979,7 @@ export default function ListsPage() {
         </div>
       </Modal>
 
-      {/* DELETE CONFIRM MODAL */}
+      {/* DELETE CONFIRM MODAL (for active lists) */}
       <ConfirmModal
         open={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
@@ -846,8 +995,18 @@ export default function ListsPage() {
         onClose={() => setIsArchiveModalOpen(false)}
         onConfirm={handleArchiveConfirm}
         title="Archive List"
-        message={`Are you sure you want to archive "${selectedList?.listName}"? You can restore it later from the archived lists section.`}
+        message={`Archive "${selectedList?.listName}"? You can restore it later from the archived lists section.`}
         isLoading={isArchiving}
+      />
+
+      {/* RESTORE CONFIRM MODAL */}
+      <ConfirmModal
+        open={isRestoreModalOpen}
+        onClose={() => setIsRestoreModalOpen(false)}
+        onConfirm={handleRestoreConfirm}
+        title="Restore List"
+        message={`Restore "${selectedList?.listName}" to active lists?`}
+        isLoading={isRestoring}
       />
     </div>
   );
