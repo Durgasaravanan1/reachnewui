@@ -76,6 +76,12 @@ const ImportIcon = () => (
     <path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0 0l-4-4m4 4l4-4" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
+const UserPlusIcon = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    <path d="M19 10v4m-2-2h4" strokeLinecap="round" />
+  </svg>
+);
 const ChevLeft = () => (
   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
     <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
@@ -145,6 +151,9 @@ const CampaignIcon = () => (
   </svg>
 );
 
+/* ─── UTILS ──────────────────────────────────────────────────────── */
+const cn = (...classes) => classes.filter(Boolean).join(' ');
+
 /* ─── SUB-COMPONENTS ─────────────────────────────────────────────── */
 const Avatar = ({ name, ci }) => {
   const ini = (name || "?")
@@ -209,7 +218,6 @@ const ContactDetailModal = ({ contact, isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
-        {/* Header with avatar and name */}
         <div className="relative bg-gradient-to-r from-indigo-50 to-slate-50 p-6 rounded-t-2xl border-b border-slate-100">
           <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
             <XIcon />
@@ -223,7 +231,6 @@ const ContactDetailModal = ({ contact, isOpen, onClose }) => {
           </div>
         </div>
         
-        {/* Details grid */}
         <div className="p-6 space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-start gap-3">
@@ -285,6 +292,178 @@ const ContactDetailModal = ({ contact, isOpen, onClose }) => {
                 Send Message
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Single Contact Modal ──
+const SingleContactModal = ({ isOpen, onClose, onAdd }) => {
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    status: 'active',
+    tags: '',
+    score: 50,
+    list: 'All Subscribers',
+  });
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validate()) return;
+    
+    setIsSubmitting(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const newContact = {
+      id: `contact_${Date.now()}`,
+      fullName: formData.fullName.trim(),
+      email: formData.email.trim(),
+      phone: formData.phone.trim(),
+      status: formData.status,
+      tags: formData.tags ? formData.tags.split(',').map(t => t.trim()) : [],
+      score: parseInt(formData.score),
+      list: formData.list,
+      campaign: '—',
+      ci: Math.floor(Math.random() * AVATAR_COLORS.length),
+    };
+    
+    onAdd(newContact);
+    setIsSubmitting(false);
+    onClose();
+    setFormData({
+      fullName: '',
+      email: '',
+      phone: '',
+      status: 'active',
+      tags: '',
+      score: 50,
+      list: 'All Subscribers',
+    });
+  };
+
+  const listOptions = ["Active Customers", "All Subscribers", "Trial Users", "VIP Customers"];
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <h3 className="text-lg font-bold text-slate-900">Add Single Contact</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+            <XIcon />
+          </button>
+        </div>
+        <div className="p-6 space-y-5">
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+              Full Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+              placeholder="John Doe"
+              className={`w-full rounded-lg border bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${errors.fullName ? "border-red-300" : "border-slate-200"}`}
+            />
+            {errors.fullName && <p className="text-xs text-red-500 mt-1">{errors.fullName}</p>}
+          </div>
+          
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+              Email <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="john@example.com"
+              className={`w-full rounded-lg border bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${errors.email ? "border-red-300" : "border-slate-200"}`}
+            />
+            {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+          </div>
+          
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Phone Number</label>
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="+91 98765 43210"
+              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Status</label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+            >
+              <option value="active">Active</option>
+              <option value="suppressed">Suppressed</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Tags (comma separated)</label>
+            <input
+              type="text"
+              value={formData.tags}
+              onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+              placeholder="vip, customer, lead"
+              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Engagement Score (0-100)</label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={formData.score}
+              onChange={(e) => setFormData({ ...formData, score: parseInt(e.target.value) || 0 })}
+              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1.5">List</label>
+            <select
+              value={formData.list}
+              onChange={(e) => setFormData({ ...formData, list: e.target.value })}
+              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+            >
+              {listOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+          </div>
+          
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <button onClick={onClose} className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
+              Cancel
+            </button>
+            <button onClick={handleSubmit} disabled={isSubmitting} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition disabled:opacity-50">
+              {isSubmitting ? 'Adding...' : 'Add Contact'}
+            </button>
           </div>
         </div>
       </div>
@@ -624,6 +803,9 @@ export default function ContactsPage() {
   const [selectedContact, setSelectedContact] = useState(null);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
+  // Single contact modal state
+  const [isSingleContactModalOpen, setIsSingleContactModalOpen] = useState(false);
+
   // Import wizard state
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importStep, setImportStep] = useState(1);
@@ -688,6 +870,15 @@ export default function ContactsPage() {
     setParsedData({ headers: [], preview: [], fullData: [] });
     setColumnMapping({});
     setIsImportModalOpen(true);
+  };
+
+  const handleAddSingleContact = () => {
+    setIsSingleContactModalOpen(true);
+  };
+
+  const handleSingleContactAdd = (newContact) => {
+    setContacts(prev => [newContact, ...prev]);
+    alert(`Contact "${newContact.fullName}" added successfully!`);
   };
 
   const handleFileSelect = (file) => { setSelectedFile(file); };
@@ -758,7 +949,6 @@ export default function ContactsPage() {
   const startItem = (currentPage - 1) * LIMIT + 1;
   const endItem = Math.min(currentPage * LIMIT, filtered.length);
 
-  // Open contact detail modal
   const openContactDetail = (contact) => {
     setSelectedContact(contact);
     setIsContactModalOpen(true);
@@ -777,6 +967,9 @@ export default function ContactsPage() {
           </p>
         </div>
         <div className="flex gap-2.5">
+          <button onClick={handleAddSingleContact} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition">
+            <UserPlusIcon /> Add Contact
+          </button>
           <button onClick={handleExport} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition">
             <UploadIcon /> Export
           </button>
@@ -903,6 +1096,13 @@ export default function ContactsPage() {
         contact={selectedContact}
         isOpen={isContactModalOpen}
         onClose={() => setIsContactModalOpen(false)}
+      />
+
+      {/* SINGLE CONTACT MODAL */}
+      <SingleContactModal
+        isOpen={isSingleContactModalOpen}
+        onClose={() => setIsSingleContactModalOpen(false)}
+        onAdd={handleSingleContactAdd}
       />
 
       {/* IMPORT MODAL - CSV Wizard */}
