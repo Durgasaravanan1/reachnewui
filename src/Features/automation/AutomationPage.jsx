@@ -289,85 +289,109 @@
 //   );
 // }
 import { useState, useEffect } from 'react';
-import { Plus, X, Lightbulb, ChevronRight } from 'lucide-react';
+import { X, Lightbulb, GitBranch, Clock, Zap } from 'lucide-react';
+import CreateSequenceModal from './CreateSequenceModal';
 
 // ----------------------------- Mock Data -----------------------------
-const MOCK_WORKFLOWS = [
+const MOCK_RULES = [
   {
-    id: 'wf_1',
-    workflowName: 'Welcome New Subscriber',
+    id: 'rule_1',
+    name: 'No Reply Follow-up',
     status: 'active',
-    trigger: { type: 'contact_added_to_list', config: { listName: 'All Subscribers' } },
-    action: { type: 'send_email_campaign', config: { campaign: 'Onboarding Welcome' }, cooldownHours: 0 },
+    trigger: 'no_reply',
+    triggerDelay: '24',
+    action: 'send_whatsapp',
+    actionContent: 'Hey {{contact_name}}, we noticed you didn\'t reply. Can we help?',
     lastRunAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     totalTriggered: 847,
   },
   {
-    id: 'wf_2',
-    workflowName: 'Re-engagement Trigger',
+    id: 'rule_2',
+    name: 'Abandoned Cart Reminder',
     status: 'active',
-    trigger: { type: 'tag_applied', config: { tag: 'Inactive-90d' } },
-    action: { type: 'add_to_list', config: { listName: 'Re-engagement campaign list' }, cooldownHours: 0 },
-    lastRunAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    trigger: 'link_clicked',
+    triggerDelay: '1',
+    action: 'send_email',
+    actionContent: 'You left items in your cart! Complete your purchase now.',
+    lastRunAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
     totalTriggered: 4220,
   },
   {
-    id: 'wf_3',
-    workflowName: 'Post-Demo WhatsApp Follow-up',
+    id: 'rule_3',
+    name: 'VIP Tag Added',
     status: 'active',
-    trigger: { type: 'campaign_link_clicked', config: { link: 'Book a Demo' } },
-    action: { type: 'send_whatsapp_campaign', config: { template: 'Demo Follow-up WhatsApp' }, cooldownHours: 0 },
-    lastRunAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    trigger: 'tag_added',
+    triggerDelay: '0',
+    action: 'add_tag',
+    actionContent: 'VIP_Customer',
+    lastRunAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
     totalTriggered: 182,
   },
   {
-    id: 'wf_4',
-    workflowName: 'Trial Expiry Reminder',
+    id: 'rule_4',
+    name: 'Trial Expiry Notify',
     status: 'paused',
-    trigger: { type: 'date_field', config: { dateField: 'trial_expiry', offset: '3 days before' } },
-    action: { type: 'send_email_campaign', config: { campaign: 'Trial Expiry' }, cooldownHours: 0 },
+    trigger: 'form_submitted',
+    triggerDelay: '72',
+    action: 'notify_team',
+    actionContent: 'Trial user needs follow-up',
     lastRunAt: null,
     totalTriggered: 0,
   },
 ];
 
-const TRIGGER_TYPES = [
-  { id: 'contact_added_to_list', label: 'Contact added to list', description: 'When a contact is added to a specific list' },
-  { id: 'tag_applied', label: 'Tag applied', description: 'When a specific tag is applied to a contact' },
-  { id: 'campaign_link_clicked', label: 'Campaign link clicked', description: 'When a specific link in a campaign is clicked' },
-  { id: 'date_field', label: 'Date field reaches value', description: 'When a date field matches a specific condition' },
+const MOCK_SEQUENCES = [
+  {
+    id: 'seq_1',
+    name: 'Welcome Series',
+    status: 'active',
+    description: 'Welcome new subscribers with a 3-step nurturing flow',
+    steps: [
+      { id: 1, delay: 0, type: 'whatsapp', content: 'Welcome to our community! 🎉' },
+      { id: 2, delay: 24, type: 'email', content: 'Here are our top features...' },
+      { id: 3, delay: 48, type: 'whatsapp', content: 'Special offer just for you!' },
+    ],
+    totalTriggered: 234,
+  },
+  {
+    id: 'seq_2',
+    name: 'Abandoned Cart Recovery',
+    status: 'paused',
+    description: 'Recover lost sales with timely reminders',
+    steps: [
+      { id: 1, delay: 0, type: 'whatsapp', content: 'You left items in your cart! 🛒' },
+      { id: 2, delay: 24, type: 'email', content: 'Complete your purchase with free shipping.' },
+      { id: 3, delay: 48, type: 'whatsapp', content: 'Last chance! Your cart will expire soon.' },
+    ],
+    totalTriggered: 89,
+  },
 ];
 
-const ACTION_TYPES = [
-  { id: 'send_email_campaign', label: 'Send email campaign', description: 'Send an email campaign to the contact' },
-  { id: 'send_whatsapp_campaign', label: 'Send WhatsApp message', description: 'Send a WhatsApp template message' },
-  { id: 'add_to_list', label: 'Add to list', description: 'Add contact to a specific list' },
-];
-
-const CONDITION_TYPES = [
-  { id: 'always', label: 'Always (no condition)', description: 'Execute action for every contact' },
-  { id: 'field_equals', label: 'Field equals value', description: 'Check if a contact field equals a specific value' },
-  { id: 'tag_exists', label: 'Has tag', description: 'Check if contact has a specific tag' },
-];
-
-const TRIGGER_LABELS = {
-  contact_added_to_list: 'Contact added to "All Subscribers"',
-  tag_applied: 'Tag "Inactive-90d" applied',
-  campaign_link_clicked: '"Book a Demo" link clicked in campaign',
-  date_field: 'Date field "trial_expiry" → 3 days before',
+// Trigger display labels
+const TRIGGER_DISPLAY = {
+  no_reply: "Contact doesn't reply",
+  email_opened: "Email is opened",
+  link_clicked: "Link is clicked",
+  tag_added: "Tag is added",
+  form_submitted: "Form is submitted",
 };
 
-const ACTION_LABELS = {
-  send_email_campaign: 'Send "Onboarding Welcome" email',
-  send_whatsapp_campaign: 'Send "Demo Follow-up" WhatsApp template',
-  add_to_list: 'Add to Re-engagement campaign list',
+// Action display labels
+const ACTION_DISPLAY = {
+  send_whatsapp: "Send WhatsApp Message",
+  send_email: "Send Email",
+  add_tag: "Add Tag",
+  remove_tag: "Remove Tag",
+  notify_team: "Notify Team",
 };
 
-const WORKFLOW_ICONS = {
-  contact_added_to_list: '🎉',
-  tag_applied: '🔄',
-  campaign_link_clicked: '💬',
-  date_field: '⏸️',
+// Rule Icons
+const RULE_ICONS = {
+  no_reply: '💬',
+  email_opened: '📧',
+  link_clicked: '🔗',
+  tag_added: '🏷️',
+  form_submitted: '📝',
 };
 
 const formatLastRun = (lastRunAt) => {
@@ -425,265 +449,73 @@ const Toggle = ({ checked, onChange, disabled }) => (
   </button>
 );
 
-// Modal Component (Popup)
-const Modal = ({ isOpen, onClose, title, children }) => {
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="px-6 py-6">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Trigger Configuration Component
-const TriggerConfig = ({ trigger, onUpdate }) => {
-  return (
-    <div className="space-y-4">
-      <label className="block text-sm font-semibold text-slate-700 mb-1.5">Select Trigger</label>
-      <div className="space-y-2">
-        {TRIGGER_TYPES.map(type => (
-          <label key={type.id} className="flex items-start gap-3 p-3 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
-            <input
-              type="radio"
-              name="triggerType"
-              value={type.id}
-              checked={trigger.type === type.id}
-              onChange={() => onUpdate({ type: type.id, config: {} })}
-              className="mt-0.5"
-            />
-            <div className="flex-1">
-              <p className="font-semibold text-slate-800 text-sm">{type.label}</p>
-              <p className="text-xs text-slate-400 mt-0.5">{type.description}</p>
-            </div>
-          </label>
-        ))}
-      </div>
-      
-      {trigger.type === 'contact_added_to_list' && (
-        <div className="border-t border-slate-100 pt-4 mt-2">
-          <label className="block text-sm font-semibold text-slate-700 mb-1.5">List Name</label>
-          <input
-            type="text"
-            value={trigger.config.listName || ''}
-            onChange={(e) => onUpdate({ ...trigger, config: { listName: e.target.value } })}
-            placeholder="e.g., All Subscribers, Newsletter List"
-            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-          />
-        </div>
-      )}
-      
-      {trigger.type === 'tag_applied' && (
-        <div className="border-t border-slate-100 pt-4 mt-2">
-          <label className="block text-sm font-semibold text-slate-700 mb-1.5">Tag Name</label>
-          <input
-            type="text"
-            value={trigger.config.tag || ''}
-            onChange={(e) => onUpdate({ ...trigger, config: { tag: e.target.value } })}
-            placeholder="e.g., VIP Customer, Inactive-90d"
-            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-          />
-        </div>
-      )}
-      
-      {trigger.type === 'campaign_link_clicked' && (
-        <div className="border-t border-slate-100 pt-4 mt-2">
-          <label className="block text-sm font-semibold text-slate-700 mb-1.5">Link Text/URL</label>
-          <input
-            type="text"
-            value={trigger.config.link || ''}
-            onChange={(e) => onUpdate({ ...trigger, config: { link: e.target.value } })}
-            placeholder="e.g., Book a Demo, Buy Now"
-            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-          />
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Condition Configuration Component
-const ConditionConfig = ({ condition, onUpdate }) => {
-  return (
-    <div className="space-y-4">
-      <label className="block text-sm font-semibold text-slate-700 mb-1.5">Add a condition (optional)</label>
-      <div className="space-y-2">
-        {CONDITION_TYPES.map(type => (
-          <label key={type.id} className="flex items-start gap-3 p-3 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
-            <input
-              type="radio"
-              name="conditionType"
-              value={type.id}
-              checked={condition.type === type.id}
-              onChange={() => onUpdate({ type: type.id, config: {} })}
-              className="mt-0.5"
-            />
-            <div className="flex-1">
-              <p className="font-semibold text-slate-800 text-sm">{type.label}</p>
-              <p className="text-xs text-slate-400 mt-0.5">{type.description}</p>
-            </div>
-          </label>
-        ))}
-      </div>
-      
-      {condition.type === 'field_equals' && (
-        <div className="border-t border-slate-100 pt-4 mt-2 space-y-3">
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Field Name</label>
-            <input
-              type="text"
-              value={condition.config?.field || ''}
-              onChange={(e) => onUpdate({ ...condition, config: { ...condition.config, field: e.target.value } })}
-              placeholder="e.g., first_name, country"
-              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Value</label>
-            <input
-              type="text"
-              value={condition.config?.value || ''}
-              onChange={(e) => onUpdate({ ...condition, config: { ...condition.config, value: e.target.value } })}
-              placeholder="e.g., John, USA"
-              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm"
-            />
-          </div>
-        </div>
-      )}
-      
-      {condition.type === 'tag_exists' && (
-        <div className="border-t border-slate-100 pt-4 mt-2">
-          <label className="block text-sm font-semibold text-slate-700 mb-1.5">Tag Name</label>
-          <input
-            type="text"
-            value={condition.config?.tag || ''}
-            onChange={(e) => onUpdate({ ...condition, config: { tag: e.target.value } })}
-            placeholder="e.g., VIP, Premium"
-            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm"
-          />
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Action Configuration Component
-const ActionConfig = ({ action, onUpdate }) => {
-  return (
-    <div className="space-y-4">
-      <label className="block text-sm font-semibold text-slate-700 mb-1.5">Select Action</label>
-      <div className="space-y-2">
-        {ACTION_TYPES.map(type => (
-          <label key={type.id} className="flex items-start gap-3 p-3 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
-            <input
-              type="radio"
-              name="actionType"
-              value={type.id}
-              checked={action.type === type.id}
-              onChange={() => onUpdate({ type: type.id, config: {} })}
-              className="mt-0.5"
-            />
-            <div className="flex-1">
-              <p className="font-semibold text-slate-800 text-sm">{type.label}</p>
-              <p className="text-xs text-slate-400 mt-0.5">{type.description}</p>
-            </div>
-          </label>
-        ))}
-      </div>
-      
-      {action.type === 'send_email_campaign' && (
-        <div className="border-t border-slate-100 pt-4 mt-2">
-          <label className="block text-sm font-semibold text-slate-700 mb-1.5">Campaign Name</label>
-          <input
-            type="text"
-            value={action.config.campaign || ''}
-            onChange={(e) => onUpdate({ ...action, config: { campaign: e.target.value } })}
-            placeholder="e.g., Onboarding Welcome, Abandoned Cart"
-            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm"
-          />
-        </div>
-      )}
-      
-      {action.type === 'send_whatsapp_campaign' && (
-        <div className="border-t border-slate-100 pt-4 mt-2">
-          <label className="block text-sm font-semibold text-slate-700 mb-1.5">WhatsApp Template</label>
-          <input
-            type="text"
-            value={action.config.template || ''}
-            onChange={(e) => onUpdate({ ...action, config: { template: e.target.value } })}
-            placeholder="e.g., Demo Follow-up, Order Confirmation"
-            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm"
-          />
-        </div>
-      )}
-      
-      {action.type === 'add_to_list' && (
-        <div className="border-t border-slate-100 pt-4 mt-2">
-          <label className="block text-sm font-semibold text-slate-700 mb-1.5">List Name</label>
-          <input
-            type="text"
-            value={action.config.listName || ''}
-            onChange={(e) => onUpdate({ ...action, config: { listName: e.target.value } })}
-            placeholder="e.g., VIP List, Newsletter"
-            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm"
-          />
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Workflow Card Component
-const WorkflowCard = ({ workflow, onToggle }) => {
+// Rule Card Component (displays trigger, delay, action properly)
+const RuleCard = ({ rule, onToggle }) => {
   const [isToggling, setIsToggling] = useState(false);
-  const isActive = workflow.status === 'active';
-  const icon = WORKFLOW_ICONS[workflow.trigger.type] || '⚡';
+  const isActive = rule.status === 'active';
+  const icon = RULE_ICONS[rule.trigger] || '⚡';
 
   const handleToggle = async (checked) => {
     setIsToggling(true);
-    await onToggle(workflow.id, checked);
+    await onToggle(rule.id, checked);
     setIsToggling(false);
+  };
+
+  // Format the action display text
+  const getActionDisplayText = () => {
+    const actionText = ACTION_DISPLAY[rule.action] || rule.action;
+    if (rule.action === 'add_tag' || rule.action === 'remove_tag') {
+      return `${actionText}: "${rule.actionContent}"`;
+    }
+    if (rule.action === 'send_whatsapp' || rule.action === 'send_email') {
+      return `${actionText}: "${rule.actionContent.substring(0, 50)}${rule.actionContent.length > 50 ? '...' : ''}"`;
+    }
+    return actionText;
+  };
+
+  // Format delay text
+  const getDelayText = () => {
+    const delayHours = parseInt(rule.triggerDelay);
+    if (delayHours === 0) return "immediately";
+    if (delayHours === 1) return "after 1 hour";
+    return `after ${delayHours} hours`;
   };
 
   return (
     <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl px-5 py-4 hover:shadow-sm transition-all">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 flex-1">
         <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center text-lg">
           {icon}
         </div>
-        <div>
-          <p className="text-[15px] font-bold text-slate-900">{workflow.workflowName}</p>
-          <p className="text-sm text-slate-500 mt-1">
-            <span className="font-medium">Trigger:</span> {TRIGGER_LABELS[workflow.trigger.type]}{" "}
-            <span className="font-medium ml-3">Action:</span> {ACTION_LABELS[workflow.action.type]}
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <p className="text-[15px] font-bold text-slate-900">{rule.name}</p>
+            <Badge variant={isActive ? 'active' : 'paused'}>
+              {isActive ? 'Active' : 'Paused'}
+            </Badge>
+          </div>
+          <p className="text-sm text-slate-500">
+            <span className="font-medium text-slate-600">Trigger:</span> {TRIGGER_DISPLAY[rule.trigger] || rule.trigger}
+            <span className="mx-2 text-slate-300">•</span>
+            <span className="font-medium text-slate-600">Wait:</span> {getDelayText()}
+            <span className="mx-2 text-slate-300">•</span>
+            <span className="font-medium text-slate-600">Action:</span> {getActionDisplayText()}
           </p>
         </div>
       </div>
 
       <div className="flex items-center gap-6">
         <div className="text-right">
-          {workflow.lastRunAt && (
-            <p className="text-xs text-slate-400">Last run: {formatLastRun(workflow.lastRunAt)}</p>
+          {rule.lastRunAt && (
+            <p className="text-xs text-slate-400">Last run: {formatLastRun(rule.lastRunAt)}</p>
           )}
-          {workflow.totalTriggered > 0 && (
-            <p className={`text-sm font-semibold ${workflow.totalTriggered > 1000 ? 'text-orange-500' : 'text-emerald-600'}`}>
-              {workflow.totalTriggered.toLocaleString()} contacts
+          {rule.totalTriggered > 0 && (
+            <p className={`text-sm font-semibold ${rule.totalTriggered > 1000 ? 'text-orange-500' : 'text-emerald-600'}`}>
+              {rule.totalTriggered.toLocaleString()} contacts
             </p>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant={isActive ? 'active' : 'paused'}>
-            {isActive ? 'Active' : 'Paused'}
-          </Badge>
           <Toggle checked={isActive} onChange={handleToggle} disabled={isToggling} />
         </div>
       </div>
@@ -691,91 +523,342 @@ const WorkflowCard = ({ workflow, onToggle }) => {
   );
 };
 
-// Main AutomationPage Component
-export default function AutomationPage() {
-  const [workflows, setWorkflows] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [isCreating, setIsCreating] = useState(false);
-  
-  const [workflowData, setWorkflowData] = useState({
+// Sequence Card Component
+const SequenceCard = ({ sequence, onToggle }) => {
+  const [isToggling, setIsToggling] = useState(false);
+  const isActive = sequence.status === 'active';
+
+  const handleToggle = async (checked) => {
+    setIsToggling(true);
+    await onToggle(sequence.id, checked);
+    setIsToggling(false);
+  };
+
+  const totalHours = sequence.steps.reduce((total, step, idx) => {
+    if (idx > 0) total += parseInt(step.delay) || 0;
+    return total;
+  }, 0);
+
+  return (
+    <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl px-5 py-4 hover:shadow-sm transition-all">
+      <div className="flex items-center gap-4 flex-1">
+        <div className="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center">
+          <GitBranch className="h-5 w-5 text-purple-600" />
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <p className="text-[15px] font-bold text-slate-900">{sequence.name}</p>
+            <Badge variant={isActive ? 'active' : 'paused'}>
+              {isActive ? 'Active' : 'Paused'}
+            </Badge>
+          </div>
+          <p className="text-sm text-slate-500">
+            <span className="font-medium text-slate-600">Steps:</span> {sequence.steps.length} messages
+            <span className="mx-2 text-slate-300">•</span>
+            <span className="font-medium text-slate-600">Duration:</span> {totalHours} hours ({Math.floor(totalHours / 24)} days)
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-6">
+        <div className="text-right">
+          {sequence.totalTriggered > 0 && (
+            <p className="text-sm font-semibold text-emerald-600">
+              {sequence.totalTriggered.toLocaleString()} contacts
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <Toggle checked={isActive} onChange={handleToggle} disabled={isToggling} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ----------------------------- Create Rule Modal -----------------------------
+const CreateRuleModal = ({ isOpen, onClose, onSave }) => {
+  const [ruleData, setRuleData] = useState({
     name: '',
-    trigger: { type: 'contact_added_to_list', config: {} },
-    condition: { type: 'always', config: {} },
-    action: { type: 'send_email_campaign', config: {} },
+    trigger: 'no_reply',
+    triggerDelay: '24',
+    action: 'send_whatsapp',
+    actionContent: '',
+    tags: [],
+    enabled: true,
   });
 
+  if (!isOpen) return null;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!ruleData.name.trim()) {
+      alert('Please enter a rule name');
+      return;
+    }
+    if ((ruleData.action === 'send_whatsapp' || ruleData.action === 'send_email') && !ruleData.actionContent.trim()) {
+      alert('Please enter message content');
+      return;
+    }
+    if ((ruleData.action === 'add_tag' || ruleData.action === 'remove_tag') && !ruleData.actionContent.trim()) {
+      alert('Please enter tag name');
+      return;
+    }
+    onSave(ruleData);
+    onClose();
+  };
+
+  const handleInputChange = (field, value) => {
+    setRuleData({ ...ruleData, [field]: value });
+  };
+
+  const getTriggerText = (trigger) => {
+    const triggerMap = {
+      no_reply: "doesn't reply",
+      email_opened: "opens email",
+      link_clicked: "clicks a link",
+      tag_added: "gets a tag added",
+      form_submitted: "submits a form"
+    };
+    return triggerMap[trigger] || trigger.replace(/_/g, ' ');
+  };
+
+  const getActionText = (action) => {
+    const actionMap = {
+      send_whatsapp: "send WhatsApp message",
+      send_email: "send email",
+      add_tag: "add tag",
+      remove_tag: "remove tag",
+      notify_team: "notify team"
+    };
+    return actionMap[action] || action.replace(/_/g, ' ');
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <Zap className="w-5 h-5 text-yellow-500" />
+            <h2 className="text-xl font-bold text-slate-900">Create Automation Rule</h2>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+            <X className="w-5 h-5 text-slate-400" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              Rule Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={ruleData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              placeholder="e.g., No Reply Follow-up"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              required
+            />
+          </div>
+
+          <div className="border-t border-slate-100 pt-6">
+            <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-indigo-500" />
+              Trigger Conditions
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  When <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={ruleData.trigger}
+                  onChange={(e) => handleInputChange('trigger', e.target.value)}
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                >
+                  <option value="no_reply">Contact doesn't reply</option>
+                  <option value="email_opened">Email is opened</option>
+                  <option value="link_clicked">Link is clicked</option>
+                  <option value="tag_added">Tag is added</option>
+                  <option value="form_submitted">Form is submitted</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Wait Time (hours)
+                </label>
+                <input
+                  type="number"
+                  value={ruleData.triggerDelay}
+                  onChange={(e) => handleInputChange('triggerDelay', e.target.value)}
+                  min="0"
+                  max="168"
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                />
+                <p className="mt-1 text-xs text-slate-400">
+                  Range: 0-168 hours (7 days). 0 = immediate
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-slate-100 pt-6">
+            <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <Zap className="w-4 h-4 text-green-500" />
+              Actions to Perform
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Action Type <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={ruleData.action}
+                  onChange={(e) => handleInputChange('action', e.target.value)}
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                >
+                  <option value="send_whatsapp">Send WhatsApp Message</option>
+                  <option value="send_email">Send Email</option>
+                  <option value="add_tag">Add Tag</option>
+                  <option value="remove_tag">Remove Tag</option>
+                  <option value="notify_team">Notify Team</option>
+                </select>
+              </div>
+              {(ruleData.action === 'send_whatsapp' || ruleData.action === 'send_email') && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Message Content <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={ruleData.actionContent}
+                    onChange={(e) => handleInputChange('actionContent', e.target.value)}
+                    placeholder="Enter your message here..."
+                    rows={4}
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none"
+                    required
+                  />
+                  <p className="mt-1 text-xs text-slate-400">
+                    Tip: Use {'{{contact_name}}'} to personalize the message
+                  </p>
+                </div>
+              )}
+              {(ruleData.action === 'add_tag' || ruleData.action === 'remove_tag') && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Tag Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={ruleData.actionContent}
+                    onChange={(e) => handleInputChange('actionContent', e.target.value)}
+                    placeholder="e.g., VIP_Customer, Follow-up_Needed"
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    required
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="p-4 bg-slate-50 rounded-lg border border-slate-100">
+            <h4 className="text-sm font-bold text-slate-900 mb-2">Rule Summary</h4>
+            <p className="text-sm text-slate-600">
+              When a contact <strong className="text-slate-900">{getTriggerText(ruleData.trigger)}</strong>{' '}
+              {parseInt(ruleData.triggerDelay) === 0 ? (
+                <strong className="text-slate-900">immediately</strong>
+              ) : (
+                <>for <strong className="text-slate-900">{ruleData.triggerDelay} hours</strong></>
+              )},
+              then <strong className="text-slate-900">{getActionText(ruleData.action)}</strong>.
+            </p>
+          </div>
+        </form>
+
+        <div className="flex flex-col sm:flex-row items-center justify-end gap-3 p-6 border-t border-slate-100">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full sm:w-auto px-6 py-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors text-slate-700 font-medium text-sm"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            className="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all font-medium text-sm shadow-sm"
+          >
+            Create Rule
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ----------------------------- Main AutomationPage Component -----------------------------
+export default function AutomationPage() {
+  const [rules, setRules] = useState([]);
+  const [sequences, setSequences] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showRuleModal, setShowRuleModal] = useState(false);
+  const [showSequenceModal, setShowSequenceModal] = useState(false);
+
   useEffect(() => {
-    const fetchWorkflows = async () => {
+    const fetchData = async () => {
       await delay(600);
-      setWorkflows(MOCK_WORKFLOWS);
+      setRules(MOCK_RULES);
+      setSequences(MOCK_SEQUENCES);
       setIsLoading(false);
     };
-    fetchWorkflows();
+    fetchData();
   }, []);
 
-  const handleToggleWorkflow = async (workflowId, shouldActivate) => {
-    setWorkflows((prev) =>
-      prev.map((wf) =>
-        wf.id === workflowId ? { ...wf, status: shouldActivate ? 'active' : 'paused' } : wf
+  const handleToggleRule = async (ruleId, shouldActivate) => {
+    setRules((prev) =>
+      prev.map((rule) =>
+        rule.id === ruleId ? { ...rule, status: shouldActivate ? 'active' : 'paused' } : rule
       )
     );
     await delay(500);
   };
 
-  const handleCreateWorkflow = async () => {
-    if (!workflowData.name.trim()) {
-      alert('Please enter a workflow name');
-      return;
-    }
+  const handleToggleSequence = async (sequenceId, shouldActivate) => {
+    setSequences((prev) =>
+      prev.map((seq) =>
+        seq.id === sequenceId ? { ...seq, status: shouldActivate ? 'active' : 'paused' } : seq
+      )
+    );
+    await delay(500);
+  };
 
-    setIsCreating(true);
-    await delay(800);
-
-    const newWorkflow = {
-      id: `wf_${Date.now()}`,
-      workflowName: workflowData.name.trim(),
-      status: 'draft',
-      trigger: workflowData.trigger,
-      action: workflowData.action,
+  const handleCreateRule = (ruleData) => {
+    const newRule = {
+      id: `rule_${Date.now()}`,
+      name: ruleData.name,
+      status: 'active',
+      trigger: ruleData.trigger,
+      triggerDelay: ruleData.triggerDelay,
+      action: ruleData.action,
+      actionContent: ruleData.actionContent,
       lastRunAt: null,
       totalTriggered: 0,
     };
-
-    setWorkflows(prev => [newWorkflow, ...prev]);
-    setIsCreating(false);
-    setIsModalOpen(false);
-    setWorkflowData({
-      name: '',
-      trigger: { type: 'contact_added_to_list', config: {} },
-      condition: { type: 'always', config: {} },
-      action: { type: 'send_email_campaign', config: {} },
-    });
-    setCurrentStep(1);
-    alert('Workflow created successfully!');
+    setRules(prev => [newRule, ...prev]);
+    alert(`Rule "${ruleData.name}" created successfully!`);
   };
 
-  const openCreateModal = () => {
-    setWorkflowData({
-      name: '',
-      trigger: { type: 'contact_added_to_list', config: {} },
-      condition: { type: 'always', config: {} },
-      action: { type: 'send_email_campaign', config: {} },
-    });
-    setCurrentStep(1);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setCurrentStep(1);
-    setWorkflowData({
-      name: '',
-      trigger: { type: 'contact_added_to_list', config: {} },
-      condition: { type: 'always', config: {} },
-      action: { type: 'send_email_campaign', config: {} },
-    });
+  const handleCreateSequence = (sequenceData) => {
+    const newSequence = {
+      id: `seq_${Date.now()}`,
+      name: sequenceData.name,
+      description: sequenceData.description,
+      status: 'active',
+      steps: sequenceData.steps,
+      totalTriggered: 0,
+    };
+    setSequences(prev => [newSequence, ...prev]);
+    alert(`Sequence "${sequenceData.name}" created successfully!`);
   };
 
   if (isLoading) {
@@ -789,127 +872,81 @@ export default function AutomationPage() {
   return (
     <div className="flex-1 px-6 py-6">
       <div className="w-full">
-        {/* Header */}
+        {/* Header with Two Buttons */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-black tracking-tight text-slate-900">Automation Workflows</h1>
-            <p className="text-sm text-slate-400 mt-1">V1: trigger → optional condition → single action</p>
+            <h1 className="text-2xl font-black tracking-tight text-slate-900">Automation</h1>
+            <p className="text-sm text-slate-400 mt-1">Create rules and sequences to automate your marketing</p>
           </div>
-          <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />} onClick={openCreateModal}>
-            New Workflow
-          </Button>
+          <div className="flex gap-3">
+            <Button variant="secondary" leftIcon={<GitBranch className="h-4 w-4" />} onClick={() => setShowSequenceModal(true)}>
+              New Sequence
+            </Button>
+            <Button variant="primary" leftIcon={<Zap className="h-4 w-4" />} onClick={() => setShowRuleModal(true)}>
+              New Rule
+            </Button>
+          </div>
         </div>
 
         {/* Info Banner */}
         <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6 flex gap-3 text-sm text-blue-700">
           <Lightbulb className="h-5 w-5 shrink-0" />
-          <p>V1 automation supports one trigger → one optional condition → one action. Multi-step sequences and branching workflows are coming in V2.</p>
+          <p><strong>Rules</strong> = One trigger → wait time → one action. <strong>Sequences</strong> = Multi-step messages with different delays. V2 will include branching workflows.</p>
         </div>
 
-        {/* Workflows List */}
-        <div className="space-y-3">
-          {workflows.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-xl">
-              <p className="text-sm text-slate-400">No workflows yet. Create your first automation!</p>
-            </div>
-          ) : (
-            workflows.map((wf) => (
-              <WorkflowCard key={wf.id} workflow={wf} onToggle={handleToggleWorkflow} />
-            ))
-          )}
+        {/* Rules Section */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Zap className="h-4 w-4 text-yellow-500" />
+            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Automation Rules</h2>
+            <span className="text-xs text-slate-400">Trigger → Wait → Action</span>
+          </div>
+          <div className="space-y-3">
+            {rules.length === 0 ? (
+              <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-xl">
+                <p className="text-sm text-slate-400">No rules yet. Click "New Rule" to create one.</p>
+              </div>
+            ) : (
+              rules.map((rule) => (
+                <RuleCard key={rule.id} rule={rule} onToggle={handleToggleRule} />
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Sequences Section */}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <GitBranch className="h-4 w-4 text-purple-600" />
+            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Follow-up Sequences</h2>
+            <span className="text-xs text-slate-400">Multi-step with delays</span>
+          </div>
+          <div className="space-y-3">
+            {sequences.length === 0 ? (
+              <div className="text-center py-8 border-2 border-dashed border-slate-200 rounded-xl">
+                <p className="text-sm text-slate-400">No sequences yet. Click "New Sequence" to create one.</p>
+              </div>
+            ) : (
+              sequences.map((seq) => (
+                <SequenceCard key={seq.id} sequence={seq} onToggle={handleToggleSequence} />
+              ))
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Create Workflow Modal (Popup) */}
-      <Modal isOpen={isModalOpen} onClose={closeModal} title="Create New Workflow">
-        <div className="space-y-6">
-          {/* Workflow Name */}
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-              Workflow Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={workflowData.name}
-              onChange={(e) => setWorkflowData({ ...workflowData, name: e.target.value })}
-              placeholder="e.g., Welcome New Subscriber, Abandoned Cart Reminder"
-              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-            />
-          </div>
+      {/* Modals */}
+      <CreateRuleModal
+        isOpen={showRuleModal}
+        onClose={() => setShowRuleModal(false)}
+        onSave={handleCreateRule}
+      />
 
-          {/* Step Indicator */}
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${currentStep >= 1 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                1
-              </div>
-              <span className={`text-sm ${currentStep >= 1 ? 'text-indigo-600' : 'text-slate-400'}`}>Trigger</span>
-            </div>
-            <ChevronRight className="h-4 w-4 text-slate-300" />
-            <div className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${currentStep >= 2 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                2
-              </div>
-              <span className={`text-sm ${currentStep >= 2 ? 'text-indigo-600' : 'text-slate-400'}`}>Condition</span>
-            </div>
-            <ChevronRight className="h-4 w-4 text-slate-300" />
-            <div className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${currentStep >= 3 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                3
-              </div>
-              <span className={`text-sm ${currentStep >= 3 ? 'text-indigo-600' : 'text-slate-400'}`}>Action</span>
-            </div>
-          </div>
-
-          <div className="h-px bg-slate-100 my-4"></div>
-
-          {/* Step 1: Trigger */}
-          {currentStep === 1 && (
-            <TriggerConfig
-              trigger={workflowData.trigger}
-              onUpdate={(trigger) => setWorkflowData({ ...workflowData, trigger })}
-            />
-          )}
-
-          {/* Step 2: Condition */}
-          {currentStep === 2 && (
-            <ConditionConfig
-              condition={workflowData.condition}
-              onUpdate={(condition) => setWorkflowData({ ...workflowData, condition })}
-            />
-          )}
-
-          {/* Step 3: Action */}
-          {currentStep === 3 && (
-            <ActionConfig
-              action={workflowData.action}
-              onUpdate={(action) => setWorkflowData({ ...workflowData, action })}
-            />
-          )}
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between pt-4 border-t border-slate-100">
-            <div>
-              {currentStep > 1 && (
-                <Button variant="secondary" onClick={() => setCurrentStep(currentStep - 1)}>
-                  Back
-                </Button>
-              )}
-            </div>
-            <div className="flex gap-3">
-              {currentStep < 3 ? (
-                <Button variant="primary" onClick={() => setCurrentStep(currentStep + 1)}>
-                  Continue
-                </Button>
-              ) : (
-                <Button variant="primary" onClick={handleCreateWorkflow} loading={isCreating}>
-                  {isCreating ? 'Creating...' : 'Create Workflow'}
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      </Modal>
+      <CreateSequenceModal
+        isOpen={showSequenceModal}
+        onClose={() => setShowSequenceModal(false)}
+        onSave={handleCreateSequence}
+      />
     </div>
   );
 }
