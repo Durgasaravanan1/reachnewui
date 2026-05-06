@@ -1,6 +1,6 @@
 // CampaignDetailPage.jsx
 import { useState, useEffect } from 'react';
-
+import { useNavigate } from 'react-router-dom';
 // ===================== Mock Data & Hook =====================
 const generateMockCampaign = (id) => ({
   id: id || 'camp_123',
@@ -202,13 +202,13 @@ const PageHeader = ({ title, description, action }) => (
 const ROUTES = { CAMPAIGNS: '/campaigns' }; // mock
 
 export default function CampaignDetailPage() {
+  const navigate = useNavigate();
   const { campaign, analytics, links, recipients, isLoading } = useCampaignDetailData();
 
   // Mock navigation (replace with real router if needed)
   const navigateToCampaigns = () => {
-    console.log('Navigate to campaigns list');
-    alert('Navigate to: ' + ROUTES.CAMPAIGNS);
-  };
+  navigate('/campaigns');
+};
 
   const handleDuplicate = () => {
     alert('Duplicate campaign (mock action)');

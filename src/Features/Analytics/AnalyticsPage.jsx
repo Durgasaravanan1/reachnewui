@@ -699,6 +699,7 @@
 
 // AnalyticsPage.jsx – Complete working model with working Export
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { FileUp } from 'lucide-react';
 import {
   subDays,
   format,
@@ -895,11 +896,11 @@ const formatPercent = (value) => {
 };
 
 // ===================== Icons (SVG) =====================
-const DownloadIcon = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0 0l-3-3m3 3l3-3" />
-  </svg>
-);
+// const DownloadIcon = () => (
+//   <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+//     <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0 0l-3-3m3 3l3-3" />
+//   </svg>
+// );
 
 const ChevronUpIcon = () => (
   <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -921,7 +922,16 @@ const Button = ({ children, variant, leftIcon, onClick, disabled, loading }) => 
     secondary: "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus:ring-slate-300",
   };
   return (
-    <button onClick={onClick} disabled={disabled || loading} className={cn(base, variants[variant] || variants.secondary, "px-3 py-2 text-sm")}>
+    // <button onClick={onClick} disabled={disabled || loading} className={cn(base, variants[variant] || variants.secondary, "px-3 py-2 text-sm")}>
+    <button
+  onClick={onClick}
+  disabled={disabled || loading}
+  className={cn(
+    base,
+    variants[variant] || variants.secondary,
+    "px-3 py-2 text-sm flex items-center justify-center"
+  )}
+>
       {loading && <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />}
       {leftIcon && !loading && leftIcon}
       {children}
@@ -929,10 +939,15 @@ const Button = ({ children, variant, leftIcon, onClick, disabled, loading }) => 
   );
 };
 
-const PeriodTabs = ({ period, setPeriod }) => {
+const PeriodTabs = ({
+  period,
+  setPeriod,
+  setShowCustomPicker,
+}) => {
   const tabs = [
     { label: 'Last 30 days', value: '30' },
     { label: 'Last 90 days', value: '90' },
+    { label: 'Custom', value: 'custom' },
   ];
   
   return (
@@ -941,9 +956,14 @@ const PeriodTabs = ({ period, setPeriod }) => {
         <button
           key={tab.value}
           onClick={() => {
-            console.log(`[Analytics] Period changed to: ${tab.label}`);
-            setPeriod(tab.value);
-          }}
+  if (tab.value === 'custom') {
+    setPeriod('custom');
+    setShowCustomPicker(true);
+  } else {
+    setPeriod(tab.value);
+    setShowCustomPicker(false);
+  }
+}}
           className={cn(
             "px-4 py-1.5 text-sm font-medium rounded-md transition-all",
             period === tab.value
@@ -1117,7 +1137,12 @@ const TrendChart = ({ data, isLoading, channel }) => {
   );
 };
 
-const CampaignTable = ({ campaigns, isLoading, onExport }) => {
+const CampaignTable = ({
+  campaigns,
+  isLoading,
+  onExport,
+  onRowClick,
+}) => {
   if (isLoading) {
     return (
       <div className="animate-pulse">
@@ -1149,7 +1174,11 @@ const CampaignTable = ({ campaigns, isLoading, onExport }) => {
         </thead>
         <tbody className="divide-y divide-slate-100">
           {campaigns.map((campaign) => (
-            <tr key={campaign.id} className="hover:bg-slate-50 transition-colors cursor-pointer">
+            <tr
+  key={campaign.id}
+  onClick={() => onRowClick(campaign)}
+  className="hover:bg-slate-50 transition-colors cursor-pointer"
+>
               <td className="px-4 py-3 font-semibold text-slate-800 whitespace-nowrap">
                 {campaign.campaignName}
               </td>
@@ -1189,10 +1218,155 @@ const CampaignTable = ({ campaigns, isLoading, onExport }) => {
   );
 };
 
+
+const CampaignDetailModal = ({ campaign, isOpen, onClose }) => {
+  if (!isOpen || !campaign) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+
+      <div
+        className="bg-white rounded-2xl max-w-2xl w-full shadow-xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+
+        {/* Header */}
+        <div className="relative bg-gradient-to-r from-indigo-50 to-slate-50 p-6 border-b border-slate-100">
+
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-black/70 hover:text-black text-2xl transition-colors"
+          >
+            ×
+          </button>
+
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">
+              {campaign.campaignName}
+            </h2>
+
+            <p className="text-sm text-slate-500 mt-1">
+              Campaign Date: {campaign.date}
+            </p>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="p-6">
+
+          <div className="grid grid-cols-2 gap-5">
+
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                Channel
+              </p>
+
+              <p className="text-sm font-medium text-slate-800 mt-1 capitalize">
+                {campaign.channel}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                Delivery Rate
+              </p>
+
+              <p className="text-sm font-medium text-slate-800 mt-1">
+                {campaign.deliveryRate}%
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                Bounce Rate
+              </p>
+
+              <p className="text-sm font-medium text-slate-800 mt-1">
+                {campaign.bounce}%
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                Unsubscribes
+              </p>
+
+              <p className="text-sm font-medium text-slate-800 mt-1">
+                {campaign.unsubs}%
+              </p>
+            </div>
+
+          </div>
+
+          {/* Metrics */}
+          <div className="border-t border-slate-100 pt-5 mt-6">
+
+            <h3 className="text-sm font-bold text-slate-900 mb-4">
+              Performance Metrics
+            </h3>
+
+            <div className="grid grid-cols-4 gap-4">
+
+              <div className="bg-indigo-50 rounded-2xl p-4 text-center border border-indigo-100">
+                <p className="text-2xl font-bold text-slate-900">
+                  {campaign.sent}
+                </p>
+
+                <p className="text-xs text-indigo-600 mt-1 font-medium">
+                  Sent
+                </p>
+              </div>
+
+              <div className="bg-emerald-50 rounded-2xl p-4 text-center border border-emerald-100">
+                <p className="text-2xl font-bold text-emerald-600">
+                  {campaign.delivered}
+                </p>
+
+                <p className="text-xs text-emerald-600 mt-1 font-medium">
+                  Delivered
+                </p>
+              </div>
+
+              <div className="bg-violet-50 rounded-2xl p-4 text-center border border-violet-100">
+                <p className="text-2xl font-bold text-indigo-600">
+                  {campaign.openRate}%
+                </p>
+
+                <p className="text-xs text-violet-600 mt-1 font-medium">
+                  Open Rate
+                </p>
+              </div>
+
+              <div className="bg-amber-50 rounded-2xl p-4 text-center border border-amber-100">
+                <p className="text-2xl font-bold text-amber-600">
+                  {campaign.ctr}%
+                </p>
+
+                <p className="text-xs text-amber-600 mt-1 font-medium">
+                  CTR
+                </p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ===================== Main AnalyticsPage Component =====================
 export default function AnalyticsPage() {
   const [period, setPeriod] = useState('30');
+  const [customStartDate, setCustomStartDate] = useState('');
+const [customEndDate, setCustomEndDate] = useState('');
+const [showCustomPicker, setShowCustomPicker] = useState(false);
   const [channel, setChannel] = useState("all");
+  const [selectedCampaign, setSelectedCampaign] = useState(null);
+const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
   const { overview, trendData, campaigns, isLoading } = useAnalyticsData(period);
 
   // Log component state
@@ -1263,6 +1437,11 @@ export default function AnalyticsPage() {
     console.log('[AnalyticsPage] CSV export completed');
   };
 
+  const openCampaignDetail = (campaign) => {
+  setSelectedCampaign(campaign);
+  setIsCampaignModalOpen(true);
+};
+
   const hardBounces = 1340;
   const unsubscribes = 892;
 
@@ -1276,9 +1455,80 @@ export default function AnalyticsPage() {
             <h3 className="text-xl font-bold text-slate-900">Analytics Overview</h3>
             <p className="text-xs text-slate-500 mt-0.5">Workspace-level performance across all campaigns</p>
           </div>
-          <div className="flex items-center gap-3">
-            <PeriodTabs period={period} setPeriod={setPeriod} />
-            <Button variant="secondary" leftIcon={<DownloadIcon />} onClick={handleExport}>
+          <div className="flex items-center gap-3 relative">
+            <PeriodTabs
+  period={period}
+  setPeriod={setPeriod}
+  setShowCustomPicker={setShowCustomPicker}
+/>
+{showCustomPicker && (
+  <div className="absolute top-14 right-24 z-50 w-[320px] bg-white border border-slate-200 rounded-xl shadow-xl p-4">
+
+    <div className="space-y-3">
+
+      <div>
+        <label className="text-xs font-medium text-slate-500 mb-1 block">
+          Start Date
+        </label>
+
+        <input
+          type="date"
+          value={customStartDate}
+          onChange={(e) => setCustomStartDate(e.target.value)}
+          className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+      </div>
+
+      <div>
+        <label className="text-xs font-medium text-slate-500 mb-1 block">
+          End Date
+        </label>
+
+        <input
+          type="date"
+          value={customEndDate}
+          onChange={(e) => setCustomEndDate(e.target.value)}
+          className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+      </div>
+
+      <div className="flex justify-end gap-2 pt-2">
+
+        <button
+          onClick={() => setShowCustomPicker(false)}
+          className="text-sm px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-50"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={() => {
+            if (!customStartDate || !customEndDate) {
+              alert('Please select both dates');
+              return;
+            }
+
+            console.log('Custom Range:', {
+              start: customStartDate,
+              end: customEndDate,
+            });
+
+            setPeriod('custom');
+            setShowCustomPicker(false);
+          }}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-4 py-2 rounded-lg"
+        >
+          Apply
+        </button>
+
+      </div>
+    </div>
+  </div>
+)}
+            <Button variant="secondary" leftIcon={<FileUp
+    className="h-4 w-4 text-indigo-500"
+    strokeWidth={2.2}
+  />} onClick={handleExport}>
               Export
             </Button>
           </div>
@@ -1421,13 +1671,27 @@ export default function AnalyticsPage() {
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
             <h3 className="text-sm font-bold text-slate-900">Campaign Performance</h3>
-            <Button variant="secondary" size="sm" leftIcon={<DownloadIcon />} onClick={handleExport}>
+            <Button variant="secondary" size="sm" leftIcon={<FileUp
+    className="h-4 w-4 text-indigo-500"
+    strokeWidth={2.2}
+  />} onClick={handleExport}>
               Export
             </Button>
           </div>
-          <CampaignTable campaigns={campaigns} isLoading={isLoading} onExport={handleExport} />
+          <CampaignTable
+  campaigns={campaigns}
+  isLoading={isLoading}
+  onExport={handleExport}
+  onRowClick={openCampaignDetail}
+/>
         </div>
       </div>
+
+      <CampaignDetailModal
+  campaign={selectedCampaign}
+  isOpen={isCampaignModalOpen}
+  onClose={() => setIsCampaignModalOpen(false)}
+/>
     </div>
     
   );

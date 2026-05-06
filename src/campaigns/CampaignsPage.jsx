@@ -1575,9 +1575,191 @@
 
 
 
-
 import React from "react";
+import {
+  Mail,
+  MessageCircle,
+  Users,
+  BarChart3,
+  MousePointerClick,
+  Calendar,
+  X,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
+const CampaignDetailModal = ({ campaign, isOpen, onClose }) => {
+  if (!isOpen || !campaign) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden border border-slate-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* HEADER */}
+        <div className="relative bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 p-6">
+          
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
+          >
+            <X size={24} />
+          </button>
+
+          <div>
+            <h2 className="text-3xl font-bold text-white">
+              {campaign.name}
+            </h2>
+
+            <p className="text-indigo-100 mt-1 text-sm">
+              {campaign.subtitle}
+            </p>
+          </div>
+        </div>
+
+        {/* BODY */}
+        <div className="p-6 space-y-6">
+
+          {/* TOP GRID */}
+          <div className="grid grid-cols-2 gap-5">
+
+            {/* Channel */}
+            <div className="flex items-start gap-3">
+              {campaign.channel === "Email" ? (
+                <Mail className="w-5 h-5 text-indigo-500 mt-1" />
+              ) : (
+                <MessageCircle className="w-5 h-5 text-emerald-500 mt-1" />
+              )}
+
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase">
+                  Channel
+                </p>
+
+                <p className="text-sm font-semibold text-slate-800 mt-1">
+                  {campaign.channel}
+                </p>
+              </div>
+            </div>
+
+            {/* Status */}
+            <div className="flex items-start gap-3">
+              <BarChart3 className="w-5 h-5 text-violet-500 mt-1" />
+
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase">
+                  Status
+                </p>
+
+                <p className="text-sm font-semibold text-slate-800 mt-1">
+                  {campaign.status}
+                </p>
+              </div>
+            </div>
+
+            {/* Audience */}
+            <div className="flex items-start gap-3">
+              <Users className="w-5 h-5 text-amber-500 mt-1" />
+
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase">
+                  Audience
+                </p>
+
+                <p className="text-sm font-semibold text-slate-800 mt-1">
+                  {campaign.audience}
+                </p>
+              </div>
+            </div>
+
+            {/* Date */}
+            <div className="flex items-start gap-3">
+              <Calendar className="w-5 h-5 text-rose-500 mt-1" />
+
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase">
+                  Campaign Date
+                </p>
+
+                <p className="text-sm font-semibold text-slate-800 mt-1">
+                  {campaign.date}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* METRICS */}
+          <div className="border-t border-slate-100 pt-5">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">
+              Performance Metrics
+            </h3>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+              <div className="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
+                <p className="text-xs font-semibold text-indigo-500 mt-1 uppercase">
+                  Sent
+                </p>
+                <p className="text-2xl font-bold text-indigo-700">
+                  {campaign.audience}
+                </p>
+
+                
+              </div>
+
+              <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
+                <p className="text-xs font-semibold text-emerald-500 mt-1 uppercase">
+                  Open Rate
+                </p>
+                <p className="text-2xl font-bold text-emerald-700">
+                  {campaign.openRate ? `${campaign.openRate}%` : "--"}
+                </p>
+
+                
+              </div>
+
+              <div className="bg-violet-50 rounded-2xl p-4 border border-violet-100">
+                <p className="text-xs font-semibold text-violet-500 mt-1 uppercase">
+                  CTR
+                </p>
+                <p className="text-2xl font-bold text-violet-700">
+                  {campaign.ctr ? `${campaign.ctr}%` : "--"}
+                </p>
+
+                
+              </div>
+
+              <div className="bg-amber-50 rounded-2xl p-4 border border-amber-100">
+                 <p className="text-xs font-semibold text-amber-500 mt-1 uppercase">
+                  Status
+                </p>
+                <p className="text-2xl font-bold text-amber-700">
+                  {campaign.status}
+                </p>
+
+               
+              </div>
+
+            </div>
+          </div>
+
+          {/* FOOTER */}
+          <div className="border-t border-slate-100 pt-5 flex justify-end">
+            <button
+              onClick={onClose}
+              className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition"
+            >
+              Close
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+};
 const mockCampaigns = [
   { 
     id: 1, 
@@ -1743,9 +1925,9 @@ const paginatedData = filteredCampaigns.slice(
 </div>
         </div>
 
-        <div className="bg-white/70 backdrop-blur-md border border-white/40 rounded-2xl px-4 py-3 mb-6 flex items-center justify-between shadow-sm">
+        <div className="bg-white/70 backdrop-blur-md border border-white/40 rounded-2xl px-4 py-3 mb-6 flex flex-wrap items-center justify-between gap-4 shadow-sm">
   {/* LEFT SIDE */}
-  <div className="flex items-center gap-3">
+  <div className="flex flex-wrap items-center gap-3 flex-1 min-w-0">
 
     {/* TABS */}
     <div className="bg-[#EEF2FF] border border-[#E2E8F0] p-1 rounded-xl flex gap-1">
@@ -1789,7 +1971,7 @@ const paginatedData = filteredCampaigns.slice(
   </div>
 
   {/* RIGHT SIDE - SEARCH */}
-  <div className="relative">
+  <div className="relative w-[240px] shrink-0">
     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8] text-xs">
       🔍
     </span>
@@ -1797,7 +1979,7 @@ const paginatedData = filteredCampaigns.slice(
   value={search}
   onChange={(e) => setSearch(e.target.value)}
   placeholder="Search campaigns..."
-  className="bg-white border border-[#E2E8F0] rounded-lg py-1.5 pl-9 pr-3 text-[12px] w-[240px] outline-none focus:ring-2 focus:ring-indigo-200 transition"
+  className="w-full bg-white border border-[#E2E8F0] rounded-lg py-1.5 pl-9 pr-3 text-[12px] outline-none focus:ring-2 focus:ring-indigo-200 transition"
 />
   </div>
 
@@ -1843,7 +2025,11 @@ const paginatedData = filteredCampaigns.slice(
 </thead>
             <tbody className="divide-y divide-gray-50">
   {paginatedData.map((c) => (
-    <tr key={c.id} className="hover:bg-gray-50/50">
+    <tr
+  key={c.id}
+  className="hover:bg-gray-50/50 transition cursor-pointer"
+  onClick={() => setSelectedCampaign(c)}
+>
       
       {/* Campaign */}
       <td className="pl-8 py-4">
@@ -1922,7 +2108,10 @@ const paginatedData = filteredCampaigns.slice(
       {/* Actions */}
       <td className="pr-8 py-4 text-right">
         <button
-          onClick={() => setSelectedCampaign(c)}
+           onClick={(e) => {
+    e.stopPropagation();
+    setSelectedCampaign(c);
+  }}
           className="text-gray-400 hover:text-gray-700 text-lg font-bold"
         >
           ⋯
@@ -1933,7 +2122,7 @@ const paginatedData = filteredCampaigns.slice(
   ))}
 </tbody>
           </table>
-          {selectedCampaign && (
+          {/* {selectedCampaign && (
   <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
     <div className="bg-white rounded-xl p-6 w-[400px] shadow-lg">
       
@@ -1959,7 +2148,14 @@ const paginatedData = filteredCampaigns.slice(
 
     </div>
   </div>
-)}
+)} */}
+
+
+<CampaignDetailModal
+  campaign={selectedCampaign}
+  isOpen={!!selectedCampaign}
+  onClose={() => setSelectedCampaign(null)}
+/>
 
           {/* FOOTER */}
          <div className="flex items-center justify-between px-6 py-4">
